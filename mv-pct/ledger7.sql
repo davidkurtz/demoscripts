@@ -1,0 +1,151 @@
+REM ledger7.sql
+spool ledger7
+@@preledger.sql
+
+CREATE TABLE ps_ledger
+(business_unit VARCHAR2(5) NOT NULL
+,ledger VARCHAR2(10) NOT NULL
+,account VARCHAR2(10) NOT NULL
+,altacct VARCHAR2(10) NOT NULL
+,deptid VARCHAR2(10) NOT NULL
+,operating_unit VARCHAR2(8) NOT NULL
+,product VARCHAR2(6) NOT NULL
+,fund_code VARCHAR2(5) NOT NULL
+,class_fld VARCHAR2(5) NOT NULL
+,program_code VARCHAR2(5) NOT NULL
+,budget_ref VARCHAR2(8) NOT NULL
+,affiliate VARCHAR2(5) NOT NULL
+,affiliate_intra1 VARCHAR2(10) NOT NULL
+,affiliate_intra2 VARCHAR2(10) NOT NULL
+,chartfield1 VARCHAR2(10) NOT NULL
+,chartfield2 VARCHAR2(10) NOT NULL
+,chartfield3 VARCHAR2(10) NOT NULL
+,project_id VARCHAR2(15) NOT NULL
+,book_code VARCHAR2(4) NOT NULL
+,gl_adjust_type VARCHAR2(4) NOT NULL
+,currency_cd VARCHAR2(3) NOT NULL
+,statistics_code VARCHAR2(3) NOT NULL
+,fiscal_year SMALLINT NOT NULL
+,accounting_period SMALLINT NOT NULL
+,posted_total_amt DECIMAL(26,3) NOT NULL
+,posted_base_amt DECIMAL(26,3) NOT NULL
+,posted_tran_amt DECIMAL(26,3) NOT NULL
+,base_currency VARCHAR2(3) NOT NULL
+,dttm_stamp_sec TIMESTAMP
+,process_instance DECIMAL(10) NOT NULL
+) PCTFREE 10 PCTUSED 80
+PARTITION BY RANGE (ACCOUNTING_PERIOD)
+SUBPARTITION BY RANGE (FISCAL_YEAR) 
+SUBPARTITION TEMPLATE
+(SUBPARTITION ledger_2018 VALUES LESS THAN (2019) 
+,SUBPARTITION ledger_2019 VALUES LESS THAN (2020)
+,SUBPARTITION ledger_2020 VALUES LESS THAN (2021) 
+,SUBPARTITION ledger_2021 VALUES LESS THAN (2022))
+(PARTITION ap_bf VALUES LESS THAN (1) 
+,PARTITION ap_01 VALUES LESS THAN (2) 
+,PARTITION ap_02 VALUES LESS THAN (3) 
+,PARTITION ap_03 VALUES LESS THAN (4) 
+,PARTITION ap_04 VALUES LESS THAN (5) 
+,PARTITION ap_05 VALUES LESS THAN (6) 
+,PARTITION ap_06 VALUES LESS THAN (7) 
+,PARTITION ap_07 VALUES LESS THAN (8) 
+,PARTITION ap_08 VALUES LESS THAN (9) 
+,PARTITION ap_09 VALUES LESS THAN (10) 
+,PARTITION ap_10 VALUES LESS THAN (11) 
+,PARTITION ap_11 VALUES LESS THAN (12) 
+,PARTITION ap_12 VALUES LESS THAN (13) 
+,PARTITION ap_cf VALUES LESS THAN (MAXVALUE))
+ENABLE ROW MOVEMENT NOLOGGING
+/
+
+set serveroutput on 
+DECLARE
+ l_sql CLOB;
+BEGIN
+ FOR i IN (
+  select * 
+  from user_tab_subpartitions
+  where table_name = 'PS_LEDGER'
+  and subpartition_name like 'AP%LEDGER%201%'
+  and (compression = 'DISABLED' OR pct_free>0)
+  order by table_name, partition_position, subpartition_position
+ ) LOOP
+  l_sql := 'ALTER TABLE '||i.table_name||' MOVE SUBPARTITION '||i.subpartition_name||' COMPRESS UPDATE INDEXES';
+  dbms_output.put_line(l_sql);
+  EXECUTE IMMEDIATE l_sql;
+ END LOOP;
+END;
+/
+
+@treeselectors
+@popledger
+
+CREATE MATERIALIZED VIEW mv_ledger_2019
+PARTITION BY RANGE (ACCOUNTING_PERIOD)
+(PARTITION ap_bf VALUES LESS THAN (1) 
+,PARTITION ap_01 VALUES LESS THAN (2) 
+,PARTITION ap_02 VALUES LESS THAN (3) 
+,PARTITION ap_03 VALUES LESS THAN (4) 
+,PARTITION ap_04 VALUES LESS THAN (5) 
+,PARTITION ap_05 VALUES LESS THAN (6) 
+,PARTITION ap_06 VALUES LESS THAN (7) 
+,PARTITION ap_07 VALUES LESS THAN (8) 
+,PARTITION ap_08 VALUES LESS THAN (9) 
+,PARTITION ap_09 VALUES LESS THAN (10) 
+,PARTITION ap_10 VALUES LESS THAN (11) 
+,PARTITION ap_11 VALUES LESS THAN (12) 
+,PARTITION ap_12 VALUES LESS THAN (13) 
+,PARTITION ap_cf VALUES LESS THAN (MAXVALUE)
+) PCTFREE 0 COMPRESS
+REFRESH COMPLETE ON DEMAND
+ENABLE QUERY REWRITE AS
+SELECT business_unit, account, chartfield1, fiscal_year, accounting_period,
+sum(posted_total_amt) posted_total_amt
+FROM ps_ledger
+WHERE fiscal_year = 2019
+AND   ledger = 'ACTUALS'
+AND   currency_cd = 'GBP'
+GROUP BY business_unit, account, chartfield1, fiscal_year, accounting_period
+/
+
+CREATE MATERIALIZED VIEW mv_ledger_2020
+PARTITION BY RANGE (ACCOUNTING_PERIOD)
+(PARTITION ap_bf VALUES LESS THAN (1) 
+,PARTITION ap_01 VALUES LESS THAN (2) 
+,PARTITION ap_02 VALUES LESS THAN (3) 
+,PARTITION ap_03 VALUES LESS THAN (4) 
+,PARTITION ap_04 VALUES LESS THAN (5) 
+,PARTITION ap_05 VALUES LESS THAN (6) 
+,PARTITION ap_06 VALUES LESS THAN (7) 
+,PARTITION ap_07 VALUES LESS THAN (8) 
+,PARTITION ap_08 VALUES LESS THAN (9) 
+,PARTITION ap_09 VALUES LESS THAN (10) 
+,PARTITION ap_10 VALUES LESS THAN (11) 
+,PARTITION ap_11 VALUES LESS THAN (12) 
+,PARTITION ap_12 VALUES LESS THAN (13) 
+,PARTITION ap_cf VALUES LESS THAN (MAXVALUE)
+) PCTFREE 0 COMPRESS PARALLEL
+REFRESH COMPLETE ON DEMAND
+ENABLE QUERY REWRITE AS
+SELECT business_unit, account, chartfield1, fiscal_year, accounting_period,
+sum(posted_total_amt) posted_total_amt
+FROM ps_ledger
+WHERE fiscal_year = 2020
+AND   ledger = 'ACTUALS'
+AND   currency_cd = 'GBP'
+GROUP BY business_unit, account, chartfield1, fiscal_year, accounting_period
+/
+
+@@mvpop
+@@mvvol
+@@mvsql
+
+@@pop2020m7
+@@mvsql
+
+@@mvtrc
+@@mvvol
+@@mvsql
+@@mvcap
+SPOOL OFF
+

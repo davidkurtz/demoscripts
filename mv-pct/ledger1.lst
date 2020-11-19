@@ -1,0 +1,2433 @@
+Connected.
+SQL> drop table ps_ledger purge;
+
+Table dropped.
+
+Elapsed: 00:00:04.37
+SQL> drop materialized view mv_ledger_2019;
+
+Materialized view dropped.
+
+Elapsed: 00:00:00.32
+SQL> drop table mv_ledger_2019 purge;
+drop table mv_ledger_2019 purge
+           *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+
+Elapsed: 00:00:00.01
+SQL> drop materialized view mv_ledger_2020;
+
+Materialized view dropped.
+
+Elapsed: 00:00:00.22
+SQL> drop table mv_ledger_2020 purge;
+drop table mv_ledger_2020 purge
+           *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+
+Elapsed: 00:00:00.01
+SQL> DROP TABLE PSTREESELECT05 PURGE;
+
+Table dropped.
+
+Elapsed: 00:00:00.08
+SQL> DROP TABLE PSTREESELECT10 PURGE;
+
+Table dropped.
+
+Elapsed: 00:00:00.23
+SQL> purge recyclebin;
+
+Recyclebin purged.
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> CREATE TABLE ps_ledger
+  2  (business_unit VARCHAR2(5) NOT NULL
+  3  ,ledger VARCHAR2(10) NOT NULL
+  4  ,account VARCHAR2(10) NOT NULL
+  5  ,altacct VARCHAR2(10) NOT NULL
+  6  ,deptid VARCHAR2(10) NOT NULL
+  7  ,operating_unit VARCHAR2(8) NOT NULL
+  8  ,product VARCHAR2(6) NOT NULL
+  9  ,fund_code VARCHAR2(5) NOT NULL
+ 10  ,class_fld VARCHAR2(5) NOT NULL
+ 11  ,program_code VARCHAR2(5) NOT NULL
+ 12  ,budget_ref VARCHAR2(8) NOT NULL
+ 13  ,affiliate VARCHAR2(5) NOT NULL
+ 14  ,affiliate_intra1 VARCHAR2(10) NOT NULL
+ 15  ,affiliate_intra2 VARCHAR2(10) NOT NULL
+ 16  ,chartfield1 VARCHAR2(10) NOT NULL
+ 17  ,chartfield2 VARCHAR2(10) NOT NULL
+ 18  ,chartfield3 VARCHAR2(10) NOT NULL
+ 19  ,project_id VARCHAR2(15) NOT NULL
+ 20  ,book_code VARCHAR2(4) NOT NULL
+ 21  ,gl_adjust_type VARCHAR2(4) NOT NULL
+ 22  ,currency_cd VARCHAR2(3) NOT NULL
+ 23  ,statistics_code VARCHAR2(3) NOT NULL
+ 24  ,fiscal_year SMALLINT NOT NULL
+ 25  ,accounting_period SMALLINT NOT NULL
+ 26  ,posted_total_amt DECIMAL(26,3) NOT NULL
+ 27  ,posted_base_amt DECIMAL(26,3) NOT NULL
+ 28  ,posted_tran_amt DECIMAL(26,3) NOT NULL
+ 29  ,base_currency VARCHAR2(3) NOT NULL
+ 30  ,dttm_stamp_sec TIMESTAMP
+ 31  ,process_instance DECIMAL(10) NOT NULL
+ 32  ) PCTFREE 10 PCTUSED 80
+ 33  PARTITION BY RANGE (FISCAL_YEAR,ACCOUNTING_PERIOD)
+ 34  SUBPARTITION BY LIST (LEDGER)
+ 35  SUBPARTITION TEMPLATE
+ 36  (SUBPARTITION actuals  VALUES ('ACTUALS')
+ 37  ,SUBPARTITION budget   VALUES ('BUDGET'))
+ 38  (PARTITION ledger_2018 VALUES LESS THAN (2019,0) PCTFREE 0 COMPRESS
+ 39  --
+ 40  ,PARTITION ledger_2019_bf VALUES LESS THAN (2019,1) PCTFREE 0 COMPRESS
+ 41  ,PARTITION ledger_2019_01 VALUES LESS THAN (2019,2) PCTFREE 0 COMPRESS
+ 42  ,PARTITION ledger_2019_02 VALUES LESS THAN (2019,3) PCTFREE 0 COMPRESS
+ 43  ,PARTITION ledger_2019_03 VALUES LESS THAN (2019,4) PCTFREE 0 COMPRESS
+ 44  ,PARTITION ledger_2019_04 VALUES LESS THAN (2019,5) PCTFREE 0 COMPRESS
+ 45  ,PARTITION ledger_2019_05 VALUES LESS THAN (2019,6) PCTFREE 0 COMPRESS
+ 46  ,PARTITION ledger_2019_06 VALUES LESS THAN (2019,7) PCTFREE 0 COMPRESS
+ 47  ,PARTITION ledger_2019_07 VALUES LESS THAN (2019,8) PCTFREE 0 COMPRESS
+ 48  ,PARTITION ledger_2019_08 VALUES LESS THAN (2019,9) PCTFREE 0 COMPRESS
+ 49  ,PARTITION ledger_2019_09 VALUES LESS THAN (2019,10) PCTFREE 0 COMPRESS
+ 50  ,PARTITION ledger_2019_10 VALUES LESS THAN (2019,11) PCTFREE 0 COMPRESS
+ 51  ,PARTITION ledger_2019_11 VALUES LESS THAN (2019,12) PCTFREE 0 COMPRESS
+ 52  ,PARTITION ledger_2019_12 VALUES LESS THAN (2019,13) PCTFREE 0 COMPRESS
+ 53  ,PARTITION ledger_2019_cf VALUES LESS THAN (2020,0) PCTFREE 0 COMPRESS
+ 54  --
+ 55  ,PARTITION ledger_2020_bf VALUES LESS THAN (2020,1) NOCOMPRESS
+ 56  ,PARTITION ledger_2020_01 VALUES LESS THAN (2020,2) NOCOMPRESS
+ 57  ,PARTITION ledger_2020_02 VALUES LESS THAN (2020,3) NOCOMPRESS
+ 58  ,PARTITION ledger_2020_03 VALUES LESS THAN (2020,4) NOCOMPRESS
+ 59  ,PARTITION ledger_2020_04 VALUES LESS THAN (2020,5) NOCOMPRESS
+ 60  ,PARTITION ledger_2020_05 VALUES LESS THAN (2020,6) NOCOMPRESS
+ 61  ,PARTITION ledger_2020_06 VALUES LESS THAN (2020,7) NOCOMPRESS
+ 62  ,PARTITION ledger_2020_07 VALUES LESS THAN (2020,8) NOCOMPRESS
+ 63  ,PARTITION ledger_2020_08 VALUES LESS THAN (2020,9) NOCOMPRESS
+ 64  ,PARTITION ledger_2020_09 VALUES LESS THAN (2020,10) NOCOMPRESS
+ 65  ,PARTITION ledger_2020_10 VALUES LESS THAN (2020,11) NOCOMPRESS
+ 66  ,PARTITION ledger_2020_11 VALUES LESS THAN (2020,12) NOCOMPRESS
+ 67  ,PARTITION ledger_2020_12 VALUES LESS THAN (2020,13) NOCOMPRESS
+ 68  ,PARTITION ledger_2020_cf VALUES LESS THAN (2021,0) NOCOMPRESS
+ 69  --
+ 70  ,PARTITION ledger_2021_bf VALUES LESS THAN (2021,1) NOCOMPRESS
+ 71  ,PARTITION ledger_2021_01 VALUES LESS THAN (2021,2) NOCOMPRESS
+ 72  ,PARTITION ledger_2021_02 VALUES LESS THAN (2021,3) NOCOMPRESS
+ 73  ,PARTITION ledger_2021_03 VALUES LESS THAN (2021,4) NOCOMPRESS
+ 74  ,PARTITION ledger_2021_04 VALUES LESS THAN (2021,5) NOCOMPRESS
+ 75  ,PARTITION ledger_2021_05 VALUES LESS THAN (2021,6) NOCOMPRESS
+ 76  ,PARTITION ledger_2021_06 VALUES LESS THAN (2021,7) NOCOMPRESS
+ 77  ,PARTITION ledger_2021_07 VALUES LESS THAN (2021,8) NOCOMPRESS
+ 78  ,PARTITION ledger_2021_08 VALUES LESS THAN (2021,9) NOCOMPRESS
+ 79  ,PARTITION ledger_2021_09 VALUES LESS THAN (2021,10) NOCOMPRESS
+ 80  ,PARTITION ledger_2021_10 VALUES LESS THAN (2021,11) NOCOMPRESS
+ 81  ,PARTITION ledger_2021_11 VALUES LESS THAN (2021,12) NOCOMPRESS
+ 82  ,PARTITION ledger_2021_12 VALUES LESS THAN (2021,13) NOCOMPRESS
+ 83  ,PARTITION ledger_2021_cf VALUES LESS THAN (2022,0) NOCOMPRESS
+ 84  )
+ 85  ENABLE ROW MOVEMENT NOLOGGING
+ 86  /
+
+Table created.
+
+Elapsed: 00:00:00.31
+SQL> @treeselectors
+SQL> REM treeselectors.sql
+SQL> 
+SQL> DROP TABLE PSTREESELECT05 PURGE;
+DROP TABLE PSTREESELECT05 PURGE
+           *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+
+Elapsed: 00:00:00.00
+SQL> CREATE TABLE PSTREESELECT05
+  2  (SELECTOR_NUM INTEGER NOT NULL,
+  3   TREE_NODE_NUM INTEGER NOT NULL,
+  4   RANGE_FROM_05 VARCHAR2(05) NOT NULL,
+  5   RANGE_TO_05   VARCHAR2(05) NOT NULL)
+  6   PARTITION BY RANGE (SELECTOR_NUM) INTERVAL (1)
+  7   (PARTITION pstreeselector VALUES LESS THAN (2))
+  8   NOPARALLEL NOLOGGING;
+
+Table created.
+
+Elapsed: 00:00:00.03
+SQL> CREATE UNIQUE INDEX PS_PSTREESELECT05 ON PSTREESELECT05 (SELECTOR_NUM, TREE_NODE_NUM, RANGE_FROM_05);
+
+Index created.
+
+Elapsed: 00:00:00.02
+SQL> 
+SQL> DROP TABLE PSTREESELECT10 PURGE;
+DROP TABLE PSTREESELECT10 PURGE
+           *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+
+Elapsed: 00:00:00.01
+SQL> CREATE TABLE PSTREESELECT10
+  2  (SELECTOR_NUM INTEGER NOT NULL,
+  3   TREE_NODE_NUM INTEGER NOT NULL,
+  4   RANGE_FROM_10 VARCHAR2(10) NOT NULL,
+  5   RANGE_TO_10   VARCHAR2(10) NOT NULL)
+  6   PARTITION BY RANGE (SELECTOR_NUM) INTERVAL (1)
+  7   (PARTITION pstreeselector VALUES LESS THAN (2))
+  8   NOPARALLEL NOLOGGING;
+
+Table created.
+
+Elapsed: 00:00:00.02
+SQL> CREATE UNIQUE INDEX PS_PSTREESELECT10 ON PSTREESELECT10 (SELECTOR_NUM, TREE_NODE_NUM, RANGE_FROM_10);
+
+Index created.
+
+Elapsed: 00:00:00.02
+SQL> 
+SQL> exec dbms_stats.set_table_prefs('SCOTT','PSTREESELECT05','GRANULARITY','ALL');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.01
+SQL> exec dbms_stats.set_table_prefs('SCOTT','PSTREESELECT10','GRANULARITY','ALL');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.01
+SQL> exec dbms_stats.set_table_prefs('SCOTT','PSTREESELECT05','METHOD_OPT','FOR ALL COLUMNS SIZE 1, FOR COLUMNS SELECTOR_NUM, (SELECTOR_NUM, TREE_NODE_NUM) SIZE 254');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.05
+SQL> exec dbms_stats.set_table_prefs('SCOTT','PSTREESELECT10','METHOD_OPT','FOR ALL COLUMNS SIZE 1, FOR COLUMNS SELECTOR_NUM, (SELECTOR_NUM, TREE_NODE_NUM) SIZE 254');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.04
+SQL> 
+SQL> @popledger
+SQL> REM popledger.sql
+SQL> set autotrace off echo on pages 99 lines 200 trimspool on
+SQL> 
+SQL> truncate table ps_ledger;
+
+Table truncated.
+
+Elapsed: 00:00:00.03
+SQL> exec dbms_stats.set_table_prefs('SCOTT','PS_LEDGER','METHOD_OPT','FOR ALL COLUMNS SIZE 1, FOR COLUMNS FISCAL_YEAR, ACCOUNTING_PERIOD, LEDGER, BUSINESS_UNIT SIZE 254');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.02
+SQL> exec dbms_stats.set_table_prefs('SCOTT','PS_LEDGER','GRANULARITY','ALL');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> ALTER TABLE PS_LEDGER PARALLEL 8;
+
+Table altered.
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> insert /*+APPEND PARALLEL ENABLE_PARALLEL_DML*/ into ps_ledger
+  2  with n as (
+  3  SELECT rownum n from dual connect by level <= 1e2
+  4  ), fy as (
+  5  SELECT 2017+rownum fiscal_year FROM dual CONNECT BY level <= 4
+  6  ), ap as (
+  7  SELECT FLOOR(dbms_random.value(0,13)) accounting_period FROM dual connect by level <= 998
+  8  UNION ALL SELECT 998 FROM DUAL CONNECT BY LEVEL <= 1
+  9  UNION ALL SELECT 999 FROM DUAL CONNECT BY LEVEL <= 1
+ 10  ), l as (
+ 11  SELECT 'ACTUALS' ledger FROM DUAL CONNECT BY LEVEL <= 10
+ 12  UNION ALL SELECT 'BUDGET' FROM DUAL
+ 13  )
+ 14  select 'BU'||LTRIM(TO_CHAR(CASE WHEN dbms_random.value <= .9 THEN 1 ELSE 2 END,'000')) business_unit
+ 15  ,	    l.ledger
+ 16  ,	    'ACC'||LTRIM(TO_CHAR(999*SQRT(dbms_random.value),'000')) account
+ 17  ,	    'ALTACCT'||LTRIM(TO_CHAR(999*dbms_random.value,'000')) altacct
+ 18  ,	    'DEPT'||LTRIM(TO_CHAR(9999*dbms_random.value,'0000')) deptid
+ 19  ,	    'OPUNIT'||LTRIM(TO_CHAR(99*dbms_random.value,'00')) operating_unit
+ 20  ,	    'P'||LTRIM(TO_CHAR(99999*dbms_random.value,'00000')) product
+ 21  ,	    'FUND'||LTRIM(TO_CHAR(9*dbms_random.value,'0')) fund_code
+ 22  ,	    'CLAS'||LTRIM(TO_CHAR(9*dbms_random.value,'0')) class_fld
+ 23  ,	    'PROD'||LTRIM(TO_CHAR(9*dbms_random.value,'0')) program_code
+ 24  ,	    ' ' budget_ref
+ 25  ,	    'AF'||LTRIM(TO_CHAR(999*dbms_random.value,'000')) affiliate
+ 26  ,	    'AFI'||LTRIM(TO_CHAR(99999*dbms_random.value,'00000')) affiliate_intra1
+ 27  ,	    'AFI'||LTRIM(TO_CHAR( 9999*dbms_random.value,'0000')) affiliate_intra2
+ 28  ,	    'CF'||LTRIM(TO_CHAR(  999*SQRT(dbms_random.value),'000')) chartfield1
+ 29  ,	    'CF'||LTRIM(TO_CHAR(99999*dbms_random.value,'00000')) chartfield2
+ 30  ,	    'CF'||LTRIM(TO_CHAR( 9999*dbms_random.value,'0000')) chartfield3
+ 31  ,	    'PRJ'||LTRIM(TO_CHAR(9999*dbms_random.value,'0000')) project_id
+ 32  ,	    'BK'||LTRIM(TO_CHAR(99*dbms_random.value,'00')) book_code
+ 33  ,	    'GL'||LTRIM(TO_CHAR(99*dbms_random.value,'00')) gl_adjust_type
+ 34  ,	    'GBP' currency_cd
+ 35  ,	    ' ' statistics_code
+ 36  ,	    fy.fiscal_year
+ 37  ,	    ap.accounting_period
+ 38  ,	    dbms_random.value(0,1e6) posted_total_amt
+ 39  ,	    0 posted_base_amt
+ 40  ,	    0 posted_tran_amt
+ 41  ,	    'GBP' base_currency
+ 42  ,	    SYSDATE dttm_stamp_sec
+ 43  ,	    0 process_instance
+ 44  FROM   fy,ap, l, n
+ 45  WHERE  l.ledger = 'BUDGET' or (fy.fiscal_year < 2020 or (fy.fiscal_year = 2020 AND ap.accounting_period <= 6))
+ 46  /
+
+2937625 rows created.
+
+Elapsed: 00:05:04.42
+SQL> commit;
+
+Commit complete.
+
+Elapsed: 00:00:00.05
+SQL> exec dbms_stats.gather_table_stats('SCOTT','PS_LEDGER');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:01:28.65
+SQL> 
+SQL> break on report on ledger skip 1
+SQL> compute sum of count(*) on report
+SQL> set autotrace off
+SQL> select ledger, fiscal_year, count(*), max(accounting_period)
+  2  from ps_ledger
+  3  group by ledger, fiscal_year
+  4  order by 1,2
+  5  /
+
+LEDGER     FISCAL_YEAR   COUNT(*) MAX(ACCOUNTING_PERIOD)
+---------- ----------- ---------- ----------------------
+ACTUALS           2018    1000000                    999
+                  2019    1000000                    999
+                  2020     537625                      6
+
+BUDGET            2018     100000                    999
+                  2019     100000                    999
+                  2020     100000                    999
+                  2021     100000                    999
+
+**********             ----------
+sum                       2937625
+
+7 rows selected.
+
+Elapsed: 00:00:03.39
+SQL> compute sum of count(*) on fiscal_year
+SQL> break on report on fiscal_year skip 1 on ledger skip 1
+SQL> select ledger, fiscal_year, accounting_period, count(*)
+  2  from ps_ledger
+  3  group by ledger, fiscal_year, accounting_period
+  4  order by 1,2,3
+  5  /
+
+LEDGER     FISCAL_YEAR ACCOUNTING_PERIOD   COUNT(*)
+---------- ----------- ----------------- ----------
+ACTUALS           2018                 0      75908
+                                       1      76979
+                                       2      76677
+                                       3      76536
+                                       4      76590
+                                       5      76855
+                                       6      76889
+                                       7      76900
+                                       8      77342
+                                       9      76851
+                                      10      76533
+                                      11      77134
+                                      12      76806
+                                     998       1000
+                                     999       1000
+
+********** ***********                   ----------
+           sum                              1000000
+
+ACTUALS           2019                 0      76793
+                                       1      77128
+                                       2      76541
+                                       3      76278
+                                       4      76871
+                                       5      77054
+                                       6      77462
+                                       7      76490
+                                       8      76792
+                                       9      77159
+                                      10      76400
+                                      11      76121
+                                      12      76911
+                                     998       1000
+                                     999       1000
+
+********** ***********                   ----------
+           sum                              1000000
+
+ACTUALS           2020                 0      76747
+                                       1      77153
+                                       2      76516
+                                       3      76500
+                                       4      76720
+                                       5      76819
+                                       6      77170
+
+********** ***********                   ----------
+           sum                               537625
+
+BUDGET            2018                 0       7562
+                                       1       7573
+                                       2       7571
+                                       3       7694
+                                       4       7708
+                                       5       7663
+                                       6       7735
+                                       7       7890
+                                       8       7652
+                                       9       7651
+                                      10       7681
+                                      11       7682
+                                      12       7738
+                                     998        100
+                                     999        100
+
+********** ***********                   ----------
+           sum                               100000
+
+BUDGET            2019                 0       7629
+                                       1       7730
+                                       2       7607
+                                       3       7644
+                                       4       7679
+                                       5       7580
+                                       6       7730
+                                       7       7730
+                                       8       7740
+                                       9       7665
+                                      10       7662
+                                      11       7655
+                                      12       7749
+                                     998        100
+                                     999        100
+
+********** ***********                   ----------
+           sum                               100000
+
+BUDGET            2020                 0       7589
+                                       1       7828
+                                       2       7783
+                                       3       7689
+                                       4       7680
+                                       5       7675
+                                       6       7566
+                                       7       7712
+                                       8       7608
+
+LEDGER     FISCAL_YEAR ACCOUNTING_PERIOD   COUNT(*)
+---------- ----------- ----------------- ----------
+BUDGET            2020                 9       7872
+                                      10       7575
+                                      11       7453
+                                      12       7770
+                                     998        100
+                                     999        100
+
+********** ***********                   ----------
+           sum                               100000
+
+BUDGET            2021                 0       7701
+                                       1       7734
+                                       2       7697
+                                       3       7751
+                                       4       7719
+                                       5       7646
+                                       6       7727
+                                       7       7640
+                                       8       7466
+                                       9       7660
+                                      10       7747
+                                      11       7561
+                                      12       7751
+                                     998        100
+                                     999        100
+
+********** ***********                   ----------
+           sum                               100000
+
+                                         ----------
+sum                                         2937625
+
+97 rows selected.
+
+Elapsed: 00:00:04.05
+SQL> break on ledger skip 1 on fiscal_year skip 1
+SQL> select ledger, account, count(*)
+  2  from ps_ledger
+  3  where 1=2
+  4  group by ledger, account
+  5  order by 1,3
+  6  /
+
+no rows selected
+
+Elapsed: 00:00:00.00
+SQL> 
+SQL> CREATE UNIQUE INDEX ps_ledger ON ps_ledger
+  2  (business_unit
+  3  ,ledger
+  4  ,account
+  5  ,deptid
+  6  ,product
+  7  ,fund_code
+  8  ,class_fld
+  9  ,affiliate
+ 10  ,chartfield2
+ 11  ,project_id
+ 12  ,book_code
+ 13  ,gl_adjust_type
+ 14  ,currency_cd
+ 15  ,statistics_code
+ 16  ,fiscal_year
+ 17  ,accounting_period
+ 18  ) COMPRESS 2
+ 19  /
+CREATE UNIQUE INDEX ps_ledger ON ps_ledger
+                                 *
+ERROR at line 1:
+ORA-01452: cannot CREATE UNIQUE INDEX; duplicate keys found
+
+
+Elapsed: 00:00:15.75
+SQL> 
+SQL> CREATE INDEX psxledger ON ps_ledger
+  2  (ledger, fiscal_year, accounting_period, business_unit, account, chartfield1
+  3  ) LOCAL COMPRESS 4 PARALLEL
+  4  /
+
+Index created.
+
+Elapsed: 00:00:10.67
+SQL> 
+SQL> CREATE INDEX psyledger ON ps_ledger
+  2  (ledger, fiscal_year, business_unit, account, chartfield1, accounting_period
+  3  ) LOCAL COMPRESS 3 PARALLEL
+  4  /
+
+Index created.
+
+Elapsed: 00:00:10.74
+SQL> 
+SQL> ALTER INDEX ps_ledger NOPARALLEL;
+ALTER INDEX ps_ledger NOPARALLEL
+*
+ERROR at line 1:
+ORA-01418: specified index does not exist
+
+
+Elapsed: 00:00:00.00
+SQL> ALTER INDEX psxledger NOPARALLEL;
+
+Index altered.
+
+Elapsed: 00:00:00.01
+SQL> ALTER INDEX psyledger NOPARALLEL;
+
+Index altered.
+
+Elapsed: 00:00:00.02
+SQL> 
+SQL> TRUNCATE TABLE PSTREESELECT05;
+
+Table truncated.
+
+Elapsed: 00:00:00.02
+SQL> TRUNCATE TABLE PSTREESELECT10;
+
+Table truncated.
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> INSERT INTO PSTREESELECT05
+  2  WITH x as (SELECT DISTINCT business_unit FROM ps_ledger)
+  3  , y as (SELECT 30982, FLOOR(DBMS_RANDOM.value(1,1e10)) tree_node_num, business_unit FROM x)
+  4  select y.*, business_unit FROM y
+  5  /
+
+2 rows created.
+
+Elapsed: 00:00:02.59
+SQL> INSERT INTO PSTREESELECT10
+  2  WITH x as (SELECT DISTINCT account FROM ps_ledger)
+  3  , y as (SELECT 30984, FLOOR(DBMS_RANDOM.value(1,1e10)) tree_node_num, account FROM x)
+  4  select y.*, account FROM y
+  5  where mod(tree_node_num,100)<25
+  6  /
+
+239 rows created.
+
+Elapsed: 00:00:03.39
+SQL> INSERT INTO PSTREESELECT10
+  2  WITH x as (SELECT DISTINCT chartfield1 FROM ps_ledger)
+  3  , y as (SELECT 30985, FLOOR(DBMS_RANDOM.value(1,1e10)) tree_node_num, chartfield1 FROM x)
+  4  select y.*, chartfield1 FROM y
+  5  where mod(tree_node_num,100)<10
+  6  /
+
+77 rows created.
+
+Elapsed: 00:00:03.43
+SQL> commit;
+
+Commit complete.
+
+Elapsed: 00:00:00.00
+SQL> 
+SQL> exec dbms_stats.gather_table_stats('SCOTT','PSTREESELECT05');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.22
+SQL> exec dbms_stats.gather_table_stats('SCOTT','PSTREESELECT10');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.54
+SQL> 
+SQL> ALTER TABLE PS_LEDGER NOPARALLEL;
+
+Table altered.
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2020
+  9  AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 2
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.15
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 346876754
+
+-----------------------------------------------------------------------------------------------------------------
+| Id  | Operation                   | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+-----------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |                   |   465 | 43245 |  1100   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY              |                   |   465 | 43245 |  1100   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN                 |                   |   465 | 43245 |  1099   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN         | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN                |                   |  1942 |   140K|  1097   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN    |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN       | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT            |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN      | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE ITERATOR|                   | 25215 |  1108K|  1094   (1)| 00:00:01 |    17 |    18 |
+|  10 |      PARTITION LIST SINGLE  |                   | 25215 |  1108K|  1094   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL     | PS_LEDGER         | 25215 |  1108K|  1094   (1)| 00:00:01 |   KEY |   KEY |
+-----------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=2 AND "A"."FISCAL_YEAR"=2020 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDA
+        TA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA
+        [L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.13
+SQL> REM spool off
+SQL> 
+SQL> CREATE MATERIALIZED VIEW mv_ledger_2019
+  2  PARTITION BY RANGE (ACCOUNTING_PERIOD)
+  3  (PARTITION ap_bf VALUES LESS THAN (1)
+  4  ,PARTITION ap_01 VALUES LESS THAN (2)
+  5  ,PARTITION ap_02 VALUES LESS THAN (3)
+  6  ,PARTITION ap_03 VALUES LESS THAN (4)
+  7  ,PARTITION ap_04 VALUES LESS THAN (5)
+  8  ,PARTITION ap_05 VALUES LESS THAN (6)
+  9  ,PARTITION ap_06 VALUES LESS THAN (7)
+ 10  ,PARTITION ap_07 VALUES LESS THAN (8)
+ 11  ,PARTITION ap_08 VALUES LESS THAN (9)
+ 12  ,PARTITION ap_09 VALUES LESS THAN (10)
+ 13  ,PARTITION ap_10 VALUES LESS THAN (11)
+ 14  ,PARTITION ap_11 VALUES LESS THAN (12)
+ 15  ,PARTITION ap_12 VALUES LESS THAN (13)
+ 16  ,PARTITION ap_cf VALUES LESS THAN (MAXVALUE)
+ 17  ) PCTFREE 0 COMPRESS
+ 18  REFRESH COMPLETE ON DEMAND
+ 19  ENABLE QUERY REWRITE AS
+ 20  SELECT business_unit, account, chartfield1, fiscal_year, accounting_period,
+ 21  sum(posted_total_amt) posted_total_amt
+ 22  FROM ps_ledger
+ 23  WHERE fiscal_year = 2019
+ 24  AND   ledger = 'ACTUALS'
+ 25  AND   currency_cd = 'GBP'
+ 26  GROUP BY business_unit, account, chartfield1, fiscal_year, accounting_period
+ 27  /
+
+Materialized view created.
+
+Elapsed: 00:00:10.00
+SQL> CREATE MATERIALIZED VIEW mv_ledger_2020
+  2  PARTITION BY RANGE (ACCOUNTING_PERIOD)
+  3  (PARTITION ap_bf VALUES LESS THAN (1)
+  4  ,PARTITION ap_01 VALUES LESS THAN (2)
+  5  ,PARTITION ap_02 VALUES LESS THAN (3)
+  6  ,PARTITION ap_03 VALUES LESS THAN (4)
+  7  ,PARTITION ap_04 VALUES LESS THAN (5)
+  8  ,PARTITION ap_05 VALUES LESS THAN (6)
+  9  ,PARTITION ap_06 VALUES LESS THAN (7)
+ 10  ,PARTITION ap_07 VALUES LESS THAN (8)
+ 11  ,PARTITION ap_08 VALUES LESS THAN (9)
+ 12  ,PARTITION ap_09 VALUES LESS THAN (10)
+ 13  ,PARTITION ap_10 VALUES LESS THAN (11)
+ 14  ,PARTITION ap_11 VALUES LESS THAN (12)
+ 15  ,PARTITION ap_12 VALUES LESS THAN (13)
+ 16  ,PARTITION ap_cf VALUES LESS THAN (MAXVALUE)
+ 17  ) PCTFREE 0 COMPRESS
+ 18  REFRESH COMPLETE ON DEMAND
+ 19  ENABLE QUERY REWRITE AS
+ 20  SELECT business_unit, account, chartfield1, fiscal_year, accounting_period,
+ 21  sum(posted_total_amt) posted_total_amt
+ 22  FROM ps_ledger
+ 23  WHERE fiscal_year = 2020
+ 24  AND   ledger = 'ACTUALS'
+ 25  AND   currency_cd = 'GBP'
+ 26  GROUP BY business_unit, account, chartfield1, fiscal_year, accounting_period
+ 27  /
+
+Materialized view created.
+
+Elapsed: 00:00:04.65
+SQL> @@mvpop
+SQL> REM mvpop.sql
+SQL> set autotrace off
+SQL> break on table_name skip 1 on partition_name
+SQL> column table_name format a20
+SQL> column mview_name format a20
+SQL> SELECT MVIEW_NAME, STALENESS, LAST_REFRESH_TYPE, COMPILE_STATE FROM USER_MVIEWS ORDER BY MVIEW_NAME;
+
+MVIEW_NAME           STALENESS           LAST_REF COMPILE_STATE
+-------------------- ------------------- -------- -------------------
+MV_LEDGER_2019       FRESH               COMPLETE VALID
+MV_LEDGER_2020       FRESH               COMPLETE VALID
+
+Elapsed: 00:00:00.00
+SQL> 
+SQL> --exec dbms_mview.refresh(list=>'MV_LEDGER_2019',method=>'P',atomic_refresh=>FALSE);
+SQL> --exec dbms_mview.refresh(list=>'MV_LEDGER_2020',method=>'P',atomic_refresh=>FALSE);
+SQL> 
+SQL> --exec dbms_mview.refresh(list=>'MV_LEDGER_2019',method=>'C',atomic_refresh=>FALSE);
+SQL> --exec dbms_mview.refresh(list=>'MV_LEDGER_2020',method=>'C',atomic_refresh=>FALSE);
+SQL> 
+SQL> ALTER MATERIALIZED VIEW mv_ledger_2019 NOPARALLEL;
+
+Materialized view altered.
+
+Elapsed: 00:00:00.02
+SQL> exec dbms_stats.set_table_prefs('SCOTT','MV_LEDGER_2019','METHOD_OPT','FOR ALL COLUMNS SIZE 1, FOR COLUMNS FISCAL_YEAR, ACCOUNTING_PERIOD, BUSINESS_UNIT SIZE 254');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.01
+SQL> exec dbms_stats.set_table_prefs('SCOTT','MV_LEDGER_2019','GRANULARITY','ALL');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> ALTER MATERIALIZED VIEW mv_ledger_2020 NOPARALLEL;
+
+Materialized view altered.
+
+Elapsed: 00:00:00.02
+SQL> exec dbms_stats.set_table_prefs('SCOTT','MV_LEDGER_2020','METHOD_OPT','FOR ALL COLUMNS SIZE 1, FOR COLUMNS FISCAL_YEAR, ACCOUNTING_PERIOD, BUSINESS_UNIT SIZE 254');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.02
+SQL> exec dbms_stats.set_table_prefs('SCOTT','MV_LEDGER_2020','GRANULARITY','ALL');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.00
+SQL> 
+SQL> exec dbms_stats.gather_table_stats('SCOTT','MV_LEDGER_2019');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:10.41
+SQL> exec dbms_stats.gather_table_stats('SCOTT','MV_LEDGER_2020');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:05.98
+SQL> @@mvsql
+SQL> REM mvsql.sql
+SQL> set autotrace off
+SQL> 
+SQL> REM 2018
+SQL> set lines 200 pages 999
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2018
+  9  AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 6
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.14
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 489184802
+
+---------------------------------------------------------------------------------------------------------------
+| Id  | Operation                 | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+---------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT          |                   |  1339 |   121K|  4425   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY            |                   |  1339 |   121K|  4425   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN               |                   |  1339 |   121K|  4424   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN       | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN              |                   |  5596 |   404K|  4422   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN  |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN     | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT          |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN    | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE SINGLE|                   | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+|  10 |      PARTITION LIST SINGLE|                   | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL   | PS_LEDGER         | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+---------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=6 AND "A"."FISCAL_YEAR"=2018 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![C
+        DATA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![C
+        DATA[L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.11
+SQL> REM spool off
+SQL> 
+SQL> REM 2019
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2019
+  9  AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 6
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.24
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1498194812
+
+----------------------------------------------------------------------------------------------------------------------
+| Id  | Operation                        | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+----------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT                 |                   |   716 | 55848 |   257   (2)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY                   |                   |   716 | 55848 |   257   (2)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN                      |                   |   716 | 55848 |   256   (2)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN              | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN                     |                   |  2993 |   172K|   254   (2)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN         |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN            | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT                 |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN           | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE ITERATOR     |                   | 38786 |  1136K|   251   (2)| 00:00:01 |     2 |     7 |
+|* 10 |      MAT_VIEW REWRITE ACCESS FULL| MV_LEDGER_2019    | 38786 |  1136K|   251   (2)| 00:00:01 |     2 |     7 |
+----------------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$94D6FF25
+   3 - SEL$94D6FF25 / L2@SEL$1
+   6 - SEL$94D6FF25 / L1@SEL$1
+   8 - SEL$94D6FF25 / L@SEL$1
+  10 - SEL$94D6FF25 / MV_LEDGER_2019@SEL$E6021893
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$94D6FF25")
+      SWAP_JOIN_INPUTS(@"SEL$94D6FF25" "L2"@"SEL$1")
+      USE_HASH(@"SEL$94D6FF25" "L2"@"SEL$1")
+      USE_HASH(@"SEL$94D6FF25" "MV_LEDGER_2019"@"SEL$E6021893")
+      USE_MERGE_CARTESIAN(@"SEL$94D6FF25" "L"@"SEL$1")
+      LEADING(@"SEL$94D6FF25" "L1"@"SEL$1" "L"@"SEL$1" "MV_LEDGER_2019"@"SEL$E6021893" "L2"@"SEL$1")
+      INDEX(@"SEL$94D6FF25" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$94D6FF25" "MV_LEDGER_2019"@"SEL$E6021893")
+      INDEX(@"SEL$94D6FF25" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$94D6FF25" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE(@"SEL$1")
+      REWRITE(@"SEL$1" "MV_LEDGER_2019")
+      OUTLINE(@"SEL$628CC171")
+      REWRITE(@"SEL$628CC171" "MV_LEDGER_2019")
+      OUTLINE_LEAF(@"SEL$94D6FF25")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("MV_LEDGER_2019"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("MV_LEDGER_2019"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND
+              "MV_LEDGER_2019"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  10 - filter("MV_LEDGER_2019"."ACCOUNTING_PERIOD"<=6)
+
+Query Block Registry:
+---------------------
+
+  <q o="6" f="y" h="y"><n><![CDATA[SEL$94D6FF25]]></n><p><![CDATA[SEL$628CC171]]></p><i><o><t>MV</t><v><![CDATA[
+        MV_LEDGER_2019]]></v></o></i><f><h><t><![CDATA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s>
+        <![CDATA[SEL$1]]></s></h><h><t><![CDATA[L2]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[MV_LEDGER_2019]]><
+        /t><s><![CDATA[SEL$E6021893]]></s></h></f></q>
+  <q o="2"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L]]></t>
+        <s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L2]]></t><s><![
+        CDATA[SEL$1]]></s></h></f></q>
+  <q o="6" h="y"><n><![CDATA[SEL$628CC171]]></n><p><![CDATA[SEL$1]]></p><i><o><t>MV</t><v><![CDATA[MV_LEDGER_201
+        9]]></v></o></i><f><h><t><![CDATA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$
+        1]]></s></h><h><t><![CDATA[L2]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[MV_LEDGER_2019]]></t><s><![CDAT
+        A[SEL$E6021893]]></s></h></f></q>
+
+
+83 rows selected.
+
+Elapsed: 00:00:00.13
+SQL> REM spool off
+SQL> 
+SQL> REM 2020
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2020
+  9  AND    (A.ACCOUNTING_PERIOD BETWEEN 1 AND 6)
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.24
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3290858815
+
+--------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation                            | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+--------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT                     |                   |  5573 |   239K|   276   (3)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY                       |                   |  5573 |   239K|   276   (3)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN                          |                   |  5573 |   239K|   275   (3)| 00:00:01 |       |       |
+|   3 |    JOIN FILTER CREATE                | :BF0000           |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|*  4 |     INDEX RANGE SCAN                 | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   5 |    VIEW                              | VW_GBC_17         |  5573 |   179K|   274   (3)| 00:00:01 |       |       |
+|   6 |     HASH GROUP BY                    |                   |  5573 |   364K|   274   (3)| 00:00:01 |       |       |
+|   7 |      JOIN FILTER USE                 | :BF0000           |  5573 |   364K|   273   (2)| 00:00:01 |       |       |
+|*  8 |       HASH JOIN                      |                   |  5573 |   364K|   273   (2)| 00:00:01 |       |       |
+|*  9 |        INDEX RANGE SCAN              | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|* 10 |        HASH JOIN                     |                   | 23295 |  1091K|   270   (2)| 00:00:01 |       |       |
+|* 11 |         INDEX RANGE SCAN             | PS_PSTREESELECT10 |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|  12 |         PARTITION RANGE ITERATOR     |                   |   301K|  8827K|   267   (2)| 00:00:01 |     2 |     7 |
+|* 13 |          MAT_VIEW REWRITE ACCESS FULL| MV_LEDGER_2020    |   301K|  8827K|   267   (2)| 00:00:01 |     2 |     7 |
+--------------------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$F7E17484
+   4 - SEL$F7E17484 / L1@SEL$1
+   5 - SEL$F2B6F736 / VW_GBC_17@SEL$A0E9A71C
+   6 - SEL$F2B6F736
+   9 - SEL$F2B6F736 / L2@SEL$1
+  11 - SEL$F2B6F736 / L@SEL$1
+  13 - SEL$F2B6F736 / MV_LEDGER_2020@SEL$5272D5B4
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$F2B6F736")
+      SWAP_JOIN_INPUTS(@"SEL$F2B6F736" "L2"@"SEL$1")
+      USE_HASH(@"SEL$F2B6F736" "L2"@"SEL$1")
+      USE_HASH(@"SEL$F2B6F736" "MV_LEDGER_2020"@"SEL$5272D5B4")
+      LEADING(@"SEL$F2B6F736" "L"@"SEL$1" "MV_LEDGER_2020"@"SEL$5272D5B4" "L2"@"SEL$1")
+      INDEX(@"SEL$F2B6F736" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$F2B6F736" "MV_LEDGER_2020"@"SEL$5272D5B4")
+      INDEX(@"SEL$F2B6F736" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      USE_HASH_AGGREGATION(@"SEL$F7E17484")
+      PX_JOIN_FILTER(@"SEL$F7E17484" "VW_GBC_17"@"SEL$A0E9A71C")
+      USE_HASH(@"SEL$F7E17484" "VW_GBC_17"@"SEL$A0E9A71C")
+      LEADING(@"SEL$F7E17484" "L1"@"SEL$1" "VW_GBC_17"@"SEL$A0E9A71C")
+      NO_ACCESS(@"SEL$F7E17484" "VW_GBC_17"@"SEL$A0E9A71C")
+      INDEX(@"SEL$F7E17484" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE(@"SEL$1")
+      REWRITE(@"SEL$1" "MV_LEDGER_2020")
+      OUTLINE(@"SEL$68C95E58")
+      REWRITE(@"SEL$68C95E58" "MV_LEDGER_2020")
+      OUTLINE(@"SEL$1E60250C")
+      OUTLINE(@"SEL$A0E9A71C")
+      PLACE_GROUP_BY(@"SEL$1E60250C" ( "L"@"SEL$1"   "L2"@"SEL$1"   "MV_LEDGER_2020"@"SEL$5272D5B4" ) 17)
+      OUTLINE_LEAF(@"SEL$F7E17484")
+      OUTLINE_LEAF(@"SEL$F2B6F736")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("ITEM_1"="L1"."RANGE_FROM_05")
+   4 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("MV_LEDGER_2020"."ACCOUNT"="L2"."RANGE_FROM_10")
+   9 - access("L2"."SELECTOR_NUM"=30984)
+  10 - access("MV_LEDGER_2020"."CHARTFIELD1"="L"."RANGE_FROM_10")
+  11 - access("L"."SELECTOR_NUM"=30985)
+  13 - filter("MV_LEDGER_2020"."ACCOUNTING_PERIOD"<=6)
+
+Query Block Registry:
+---------------------
+
+  <q o="6" h="y"><n><![CDATA[SEL$1E60250C]]></n><p><![CDATA[SEL$68C95E58]]></p><i><o><t>MV</t><v><![CDATA[MV_LEDGER_
+        2020]]></v></o></i><f><h><t><![CDATA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1
+        ]]></s></h><h><t><![CDATA[L2]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[MV_LEDGER_2020]]></t><s><![CDATA[SEL
+        $5272D5B4]]></s></h></f></q>
+  <q o="2"><n><![CDATA[SEL$5272D5B4]]></n><f><h><t><![CDATA[MV_LEDGER_2020]]></t><s><![CDATA[SEL$5272D5B4]]></s></h>
+        </f></q>
+  <q o="43" f="y" h="y"><n><![CDATA[SEL$F7E17484]]></n><p><![CDATA[SEL$1E60250C]]></p><i><o><t>TA</t><v><![CDATA[L@S
+        EL$1]]></v></o><o><t>TA</t><v><![CDATA[L2@SEL$1]]></v></o><o><t>TA</t><v><![CDATA[MV_LEDGER_2020@SEL$5272D5B4]]></
+        v></o></i><f><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[VW_GBC_17]]></t><s><![CDATA[SEL$A0
+        E9A71C]]></s></h></f></q>
+  <q o="2"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L]]></t><s><
+        ![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L2]]></t><s><![CDATA[SE
+        L$1]]></s></h></f></q>
+  <q o="6" h="y"><n><![CDATA[SEL$68C95E58]]></n><p><![CDATA[SEL$1]]></p><i><o><t>MV</t><v><![CDATA[MV_LEDGER_2020]]>
+        </v></o></i><f><h><t><![CDATA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s>
+        </h><h><t><![CDATA[L2]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[MV_LEDGER_2020]]></t><s><![CDATA[SEL$5272D5
+        B4]]></s></h></f></q>
+  <q o="26"><n><![CDATA[SEL$A0E9A71C]]></n><p><![CDATA[SEL$1E60250C]]></p><i><o><t>FA</t><v><![CDATA["L"@"SEL$1"]]><
+        /v></o><o><t>FA</t><v><![CDATA["L2"@"SEL$1"]]></v></o><o><t>FA</t><v><![CDATA["MV_LEDGER_2020"@"SEL$5272D5B4"]]></
+        v></o></i><f><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[VW_GBC_17]]></t><s><![CDATA[SEL$A0
+        E9A71C]]></s></h></f></q>
+  <q o="15" f="y"><n><![CDATA[SEL$F2B6F736]]></n><p><![CDATA[SEL$A0E9A71C]]></p><f><h><t><![CDATA[L]]></t><s><![CDAT
+        A[SEL$1]]></s></h><h><t><![CDATA[L2]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[MV_LEDGER_2020]]></t><s><![CD
+        ATA[SEL$5272D5B4]]></s></h></f></q>
+
+
+109 rows selected.
+
+Elapsed: 00:00:00.15
+SQL> REM spool off
+SQL> set autotrace off
+SQL> @@pop2020m7
+SQL> REM pop2020m7.sql
+SQL> set autotrace off
+SQL> insert into ps_ledger
+  2  with n as (
+  3  SELECT rownum n from dual connect by level <= 1e6/13
+  4  --), fy as (
+  5  --SELECT 2017+rownum fiscal_year FROM dual CONNECT BY level <= 4
+  6  --), ap as (
+  7  --SELECT FLOOR(dbms_random.value(0,13)) accounting_period FROM dual connect by level <= 998
+  8  --UNION ALL SELECT 998 FROM DUAL CONNECT BY LEVEL <= 1
+  9  --UNION ALL SELECT 999 FROM DUAL CONNECT BY LEVEL <= 1
+ 10  --), l as (
+ 11  --SELECT 'ACTUALS' ledger FROM DUAL CONNECT BY LEVEL <= 10
+ 12  --UNION ALL SELECT 'BUDGET' FROM DUAL
+ 13  )
+ 14  select 'BU'||LTRIM(TO_CHAR(CASE WHEN dbms_random.value <= .9 THEN 1 ELSE 2 END,'000')) business_unit
+ 15  ,	    'ACTUALS' ledger
+ 16  ,	    'ACC'||LTRIM(TO_CHAR(999*SQRT(dbms_random.value),'000')) account
+ 17  ,	    'ALTACCT'||LTRIM(TO_CHAR(999*dbms_random.value,'000')) altacct
+ 18  ,	    'DEPT'||LTRIM(TO_CHAR(9999*dbms_random.value,'0000')) deptid
+ 19  ,	    'OPUNIT'||LTRIM(TO_CHAR(99*dbms_random.value,'00')) operating_unit
+ 20  ,	    'P'||LTRIM(TO_CHAR(99999*dbms_random.value,'00000')) product
+ 21  ,	    'FUND'||LTRIM(TO_CHAR(9*dbms_random.value,'0')) fund_code
+ 22  ,	    'CLAS'||LTRIM(TO_CHAR(9*dbms_random.value,'0')) class_fld
+ 23  ,	    'PROD'||LTRIM(TO_CHAR(9*dbms_random.value,'0')) program_code
+ 24  ,	    ' ' budget_ref
+ 25  ,	    'AF'||LTRIM(TO_CHAR(999*dbms_random.value,'000')) affiliate
+ 26  ,	    'AFI'||LTRIM(TO_CHAR(99999*dbms_random.value,'00000')) affiliate_intra1
+ 27  ,	    'AFI'||LTRIM(TO_CHAR( 9999*dbms_random.value,'0000')) affiliate_intra2
+ 28  ,	    'CF'||LTRIM(TO_CHAR(  999*SQRT(dbms_random.value),'000')) chartfield1
+ 29  ,	    'CF'||LTRIM(TO_CHAR(99999*dbms_random.value,'00000')) chartfield2
+ 30  ,	    'CF'||LTRIM(TO_CHAR( 9999*dbms_random.value,'0000')) chartfield3
+ 31  ,	    'PRJ'||LTRIM(TO_CHAR(9999*dbms_random.value,'0000')) project_id
+ 32  ,	    'BK'||LTRIM(TO_CHAR(99*dbms_random.value,'00')) book_code
+ 33  ,	    'GL'||LTRIM(TO_CHAR(99*dbms_random.value,'00')) gl_adjust_type
+ 34  ,	    'GBP' currency_cd
+ 35  ,	    ' ' statistics_code
+ 36  ,	    2020 fiscal_year
+ 37  ,	    7 accounting_period
+ 38  ,	    dbms_random.value(0,1e6) posted_total_amt
+ 39  ,	    0 posted_base_amt
+ 40  ,	    0 posted_tran_amt
+ 41  ,	    'GBP' base_currency
+ 42  ,	    SYSDATE dttm_stamp_sec
+ 43  ,	    0 process_instance
+ 44  FROM   n
+ 45  --WHERE  l.ledger = 'ACTUALS'
+ 46  --AND    fy.fiscal_year = 2020
+ 47  --AND    ap.accounting_period = 7
+ 48  /
+
+76923 rows created.
+
+Elapsed: 00:00:15.70
+SQL> set lines 200 pages 999 autotrace off
+SQL> SELECT MVIEW_NAME, STALENESS, LAST_REFRESH_TYPE, COMPILE_STATE FROM USER_MVIEWS ORDER BY MVIEW_NAME;
+
+MVIEW_NAME           STALENESS           LAST_REF COMPILE_STATE
+-------------------- ------------------- -------- -------------------
+MV_LEDGER_2019       FRESH               COMPLETE VALID
+MV_LEDGER_2020       FRESH               COMPLETE VALID
+
+Elapsed: 00:00:00.00
+SQL> commit;
+
+Commit complete.
+
+Elapsed: 00:00:00.01
+SQL> column owner format a10
+SQL> column table_name format a15
+SQL> column mview_name format a15
+SQL> column detailobj_owner format a10 heading 'Detailobj|Owner'
+SQL> column detailobj_name  format a15
+SQL> column detailobj_alias format a20
+SQL> column detail_partition_name format a20
+SQL> column detail_subpartition_name format a20
+SQL> column parent_table_partition format a20
+SQL> SELECT MVIEW_NAME, STALENESS, LAST_REFRESH_TYPE, COMPILE_STATE FROM USER_MVIEWS ORDER BY MVIEW_NAME;
+
+MVIEW_NAME      STALENESS           LAST_REF COMPILE_STATE
+--------------- ------------------- -------- -------------------
+MV_LEDGER_2019  NEEDS_COMPILE       COMPLETE NEEDS_COMPILE
+MV_LEDGER_2020  NEEDS_COMPILE       COMPLETE NEEDS_COMPILE
+
+Elapsed: 00:00:00.00
+SQL> select * from user_mview_detail_relations;
+
+                           Detailobj
+OWNER      MVIEW_NAME      Owner      DETAILOBJ_NAME  DETAILOBJ DETAILOBJ_ALIAS      D NUM_FRESH_PCT_PARTITIONS NUM_STALE_PCT_PARTITIONS
+---------- --------------- ---------- --------------- --------- -------------------- - ------------------------ ------------------------
+SCOTT      MV_LEDGER_2019  SCOTT      PS_LEDGER       TABLE     PS_LEDGER            N                       86                        0
+SCOTT      MV_LEDGER_2020  SCOTT      PS_LEDGER       TABLE     PS_LEDGER            N                       86                        0
+
+Elapsed: 00:00:19.48
+SQL> select * from user_mview_detail_partition;
+
+no rows selected
+
+Elapsed: 00:00:00.00
+SQL> select * from user_mview_detail_subpartition where freshness != 'FRESH';
+
+no rows selected
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> @@mvsql
+SQL> REM mvsql.sql
+SQL> set autotrace off
+SQL> 
+SQL> REM 2018
+SQL> set lines 200 pages 999
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2018
+  9  AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 6
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.16
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 489184802
+
+---------------------------------------------------------------------------------------------------------------
+| Id  | Operation                 | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+---------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT          |                   |  1339 |   121K|  4425   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY            |                   |  1339 |   121K|  4425   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN               |                   |  1339 |   121K|  4424   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN       | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN              |                   |  5596 |   404K|  4422   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN  |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN     | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT          |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN    | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE SINGLE|                   | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+|  10 |      PARTITION LIST SINGLE|                   | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL   | PS_LEDGER         | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+---------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=6 AND "A"."FISCAL_YEAR"=2018 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![C
+        DATA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![C
+        DATA[L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.11
+SQL> REM spool off
+SQL> 
+SQL> REM 2019
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2019
+  9  AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 6
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.13
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 346876754
+
+-----------------------------------------------------------------------------------------------------------------
+| Id  | Operation                   | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+-----------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |                   |   492 | 45756 |  2036   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY              |                   |   492 | 45756 |  2036   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN                 |                   |   492 | 45756 |  2035   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN         | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN                |                   |  2055 |   148K|  2033   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN    |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN       | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT            |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN      | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE ITERATOR|                   | 26686 |  1172K|  2030   (1)| 00:00:01 |     3 |     8 |
+|  10 |      PARTITION LIST SINGLE  |                   | 26686 |  1172K|  2030   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL     | PS_LEDGER         | 26686 |  1172K|  2030   (1)| 00:00:01 |   KEY |   KEY |
+-----------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=6 AND "A"."FISCAL_YEAR"=2019 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDA
+        TA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA
+        [L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.11
+SQL> REM spool off
+SQL> 
+SQL> REM 2020
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2020
+  9  AND    (A.ACCOUNTING_PERIOD BETWEEN 1 AND 6)
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.13
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 346876754
+
+-----------------------------------------------------------------------------------------------------------------
+| Id  | Operation                   | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+-----------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |                   |   492 | 45756 |  3281   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY              |                   |   492 | 45756 |  3281   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN                 |                   |   492 | 45756 |  3280   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN         | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN                |                   |  2055 |   148K|  3278   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN    |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN       | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT            |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN      | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE ITERATOR|                   | 26686 |  1172K|  3275   (1)| 00:00:01 |    17 |    22 |
+|  10 |      PARTITION LIST SINGLE  |                   | 26686 |  1172K|  3275   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL     | PS_LEDGER         | 26686 |  1172K|  3275   (1)| 00:00:01 |   KEY |   KEY |
+-----------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=6 AND "A"."FISCAL_YEAR"=2020 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDA
+        TA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA
+        [L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.12
+SQL> REM spool off
+SQL> set autotrace off
+SQL> @@mvtrc
+SQL> REM mvtrc.sql
+SQL> disconnect
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.9.0.0.0
+SQL> connect scott/tiger@oracle_pdb
+Connected.
+SQL> 
+SQL> column name format a20
+SQL> column value format a70
+SQL> select * from v$diag_info where name like '%Trace%';
+
+   INST_ID NAME                 VALUE                                                                      CON_ID
+---------- -------------------- ---------------------------------------------------------------------- ----------
+         1 Diag Trace           /u01/app/oracle/diag/rdbms/oracle/oracle/trace                                  0
+         1 Default Trace File   /u01/app/oracle/diag/rdbms/oracle/oracle/trace/oracle_ora_6059.trc              0
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> alter session set tracefile_identifier=PCT;
+
+Session altered.
+
+Elapsed: 00:00:00.00
+SQL> alter session set sql_trace = true;
+
+Session altered.
+
+Elapsed: 00:00:00.00
+SQL> exec dbms_mview.refresh(list=>'MV_LEDGER_2020',method=>'P',atomic_refresh=>FALSE);
+BEGIN dbms_mview.refresh(list=>'MV_LEDGER_2020',method=>'P',atomic_refresh=>FALSE); END;
+
+*
+ERROR at line 1:
+ORA-12047: PCT FAST REFRESH cannot be used for materialized view "SCOTT"."MV_LEDGER_2020"
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 3020
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 2432
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 88
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 253
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 2413
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 2976
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 3263
+ORA-06512: at "SYS.DBMS_SNAPSHOT_KKXRCA", line 3295
+ORA-06512: at "SYS.DBMS_SNAPSHOT", line 16
+ORA-06512: at line 1
+
+
+Elapsed: 00:00:00.08
+SQL> alter session set sql_trace = false;
+
+Session altered.
+
+Elapsed: 00:00:00.00
+SQL> exec dbms_stats.gather_Table_stats(user,'MV_LEDGER_2020');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:04.91
+SQL> 
+SQL> alter session set nls_date_Format = 'hh24:mi:ss dd.mm.yyyy';
+
+Session altered.
+
+Elapsed: 00:00:00.01
+SQL> break on table_name skip 1
+SQL> select table_name, partition_name, num_rows, blocks, last_analyzed
+  2  from user_tab_partitions
+  3  where table_name like '%LEDGER%'
+  4  order by 1,2;
+
+TABLE_NAME      PARTITION_NAME                                                                                                                     NUM_ROWS     BLOCKS LAST_ANALYZED
+--------------- -------------------------------------------------------------------------------------------------------------------------------- ---------- ---------- -------------------
+MV_LEDGER_2019  AP_01                                                                                                                                 41164        152 18:37:43 15.11.2020
+                AP_02                                                                                                                                 40843        151 18:37:44 15.11.2020
+                AP_03                                                                                                                                 40751        151 18:37:44 15.11.2020
+                AP_04                                                                                                                                 40995        151 18:37:44 15.11.2020
+                AP_05                                                                                                                                 40994        151 18:37:45 15.11.2020
+                AP_06                                                                                                                                 41349        153 18:37:45 15.11.2020
+                AP_07                                                                                                                                 40864        151 18:37:45 15.11.2020
+                AP_08                                                                                                                                 40998        151 18:37:46 15.11.2020
+                AP_09                                                                                                                                 41205        152 18:37:46 15.11.2020
+                AP_10                                                                                                                                 40777        151 18:37:46 15.11.2020
+                AP_11                                                                                                                                 40635        150 18:37:47 15.11.2020
+                AP_12                                                                                                                                 41095        152 18:37:47 15.11.2020
+                AP_BF                                                                                                                                 40946        151 18:37:47 15.11.2020
+                AP_CF                                                                                                                                  1099         22 18:37:47 15.11.2020
+
+MV_LEDGER_2020  AP_01                                                                                                                                 44234        162 18:38:37 15.11.2020
+                AP_02                                                                                                                                 43938        161 18:38:37 15.11.2020
+                AP_03                                                                                                                                 43946        161 18:38:38 15.11.2020
+                AP_04                                                                                                                                 44097        161 18:38:38 15.11.2020
+                AP_05                                                                                                                                 44080        161 18:38:38 15.11.2020
+                AP_06                                                                                                                                 44285        162 18:38:39 15.11.2020
+                AP_07                                                                                                                                     0          0 18:38:39 15.11.2020
+                AP_08                                                                                                                                     0          0 18:38:39 15.11.2020
+                AP_09                                                                                                                                     0          0 18:38:39 15.11.2020
+                AP_10                                                                                                                                     0          0 18:38:39 15.11.2020
+                AP_11                                                                                                                                     0          0 18:38:39 15.11.2020
+                AP_12                                                                                                                                     0          0 18:38:39 15.11.2020
+                AP_BF                                                                                                                                 44086        161 18:38:39 15.11.2020
+                AP_CF                                                                                                                                     0          0 18:38:39 15.11.2020
+
+PS_LEDGER       LEDGER_2018                                                                                                                         1100000      17917 18:35:43 15.11.2020
+                LEDGER_2019_01                                                                                                                        84858       1386 18:35:50 15.11.2020
+                LEDGER_2019_02                                                                                                                        84148       1376 18:35:51 15.11.2020
+                LEDGER_2019_03                                                                                                                        83922       1370 18:35:52 15.11.2020
+                LEDGER_2019_04                                                                                                                        84550       1382 18:35:54 15.11.2020
+                LEDGER_2019_05                                                                                                                        84634       1382 18:35:55 15.11.2020
+                LEDGER_2019_06                                                                                                                        85192       1391 18:35:56 15.11.2020
+                LEDGER_2019_07                                                                                                                        84220       1376 18:35:57 15.11.2020
+                LEDGER_2019_08                                                                                                                        84532       1380 18:35:58 15.11.2020
+                LEDGER_2019_09                                                                                                                        84824       1384 18:35:59 15.11.2020
+                LEDGER_2019_10                                                                                                                        84062       1371 18:36:00 15.11.2020
+                LEDGER_2019_11                                                                                                                        83776       1368 18:36:01 15.11.2020
+                LEDGER_2019_12                                                                                                                        84660       1383 18:36:02 15.11.2020
+                LEDGER_2019_BF                                                                                                                        84422       1378 18:36:04 15.11.2020
+                LEDGER_2019_CF                                                                                                                         2200         63 18:36:05 15.11.2020
+                LEDGER_2020_01                                                                                                                        84981       2230 18:36:05 15.11.2020
+                LEDGER_2020_02                                                                                                                        84299       2212 18:36:06 15.11.2020
+                LEDGER_2020_03                                                                                                                        84189       2209 18:36:07 15.11.2020
+                LEDGER_2020_04                                                                                                                        84400       2215 18:36:07 15.11.2020
+                LEDGER_2020_05                                                                                                                        84494       2217 18:36:08 15.11.2020
+                LEDGER_2020_06                                                                                                                        84736       2223 18:36:09 15.11.2020
+                LEDGER_2020_07                                                                                                                         7712        214 18:36:09 15.11.2020
+                LEDGER_2020_08                                                                                                                         7608        211 18:36:10 15.11.2020
+                LEDGER_2020_09                                                                                                                         7872        218 18:36:10 15.11.2020
+                LEDGER_2020_10                                                                                                                         7575        211 18:36:10 15.11.2020
+                LEDGER_2020_11                                                                                                                         7453        207 18:36:10 15.11.2020
+                LEDGER_2020_12                                                                                                                         7770        215 18:36:10 15.11.2020
+                LEDGER_2020_BF                                                                                                                        84336       2188 18:36:10 15.11.2020
+                LEDGER_2020_CF                                                                                                                          200         24 18:36:11 15.11.2020
+                LEDGER_2021_01                                                                                                                         7734        214 18:36:11 15.11.2020
+                LEDGER_2021_02                                                                                                                         7697        214 18:36:11 15.11.2020
+                LEDGER_2021_03                                                                                                                         7751        215 18:36:12 15.11.2020
+                LEDGER_2021_04                                                                                                                         7719        214 18:36:12 15.11.2020
+                LEDGER_2021_05                                                                                                                         7646        212 18:36:12 15.11.2020
+                LEDGER_2021_06                                                                                                                         7727        214 18:36:12 15.11.2020
+                LEDGER_2021_07                                                                                                                         7640        212 18:36:12 15.11.2020
+                LEDGER_2021_08                                                                                                                         7466        208 18:36:12 15.11.2020
+                LEDGER_2021_09                                                                                                                         7660        213 18:36:12 15.11.2020
+                LEDGER_2021_10                                                                                                                         7747        215 18:36:13 15.11.2020
+                LEDGER_2021_11                                                                                                                         7561        210 18:36:13 15.11.2020
+                LEDGER_2021_12                                                                                                                         7751        215 18:36:13 15.11.2020
+                LEDGER_2021_BF                                                                                                                         7701        211 18:36:13 15.11.2020
+                LEDGER_2021_CF                                                                                                                          200         24 18:36:13 15.11.2020
+
+
+71 rows selected.
+
+Elapsed: 00:00:00.02
+SQL> 
+SQL> @@mvvol
+SQL> REM mvvol.sql
+SQL> 
+SQL> set autotrace off
+SQL> break on table_name skip 1 on partition_name
+SQL> column table_name format a20
+SQL> column mview_name format a20
+SQL> column partition_position format 999 heading 'Part|Pos'
+SQL> column subpartition_position format 999 heading 'Sub-|Part|Pos'
+SQL> column partition_name format a20
+SQL> column subpartition_name format a25
+SQL> column num_rows format 9999999
+SQL> column blocks format 99999
+SQL> column rpb format 999.9 heading 'Rows|per|Block'
+SQL> SELECT MVIEW_NAME, STALENESS, LAST_REFRESH_TYPE, COMPILE_STATE FROM USER_MVIEWS ORDER BY MVIEW_NAME;
+
+MVIEW_NAME           STALENESS           LAST_REF COMPILE_STATE
+-------------------- ------------------- -------- -------------------
+MV_LEDGER_2019       STALE               COMPLETE VALID
+MV_LEDGER_2020       STALE               COMPLETE VALID
+
+Elapsed: 00:00:00.00
+SQL> 
+SQL> select count(*) from mv_ledger_2019;
+
+  COUNT(*)
+----------
+    533715
+
+Elapsed: 00:00:00.06
+SQL> select count(*) from mv_ledger_2020;
+
+  COUNT(*)
+----------
+    308666
+
+Elapsed: 00:00:00.02
+SQL> 
+SQL> select a.table_name, a.partition_position, a.partition_name, a.subpartition_position, a.subpartition_name
+  2  , a.num_rows, a.blocks, a.num_rows/nullif(a.blocks,0) rpb
+  3  , COALESCE(c.compression, b.compression) compression
+  4  , COALESCE(c.compress_for, b.compress_for) compress_for
+  5  from user_tab_statistics a
+  6    LEFT OUTER JOIN user_tab_partitions b
+  7  	 ON a.table_name = b.table_name
+  8  	 AND a.partition_name = b.partition_name
+  9    LEFT OUTER JOIN user_tab_subpartitions c
+ 10  	 ON a.table_name = c.table_name
+ 11  	 AND a.partition_name = c.partition_name
+ 12  	 AND a.subpartition_name = c.subpartition_name
+ 13  where a.table_name like '%LEDGER%'
+ 14  order by a.table_name, a.partition_position, a.subpartition_position nulls first
+ 15  /
+
+                                               Sub-                                             Rows
+                     Part                      Part                                              per
+TABLE_NAME            Pos PARTITION_NAME        Pos SUBPARTITION_NAME         NUM_ROWS BLOCKS  Block COMPRESS COMPRESS_FOR
+-------------------- ---- -------------------- ---- ------------------------- -------- ------ ------ -------- ------------------------------
+MV_LEDGER_2019          1 AP_BF                                                  40946    151  271.2 ENABLED  BASIC
+                        2 AP_01                                                  41164    152  270.8 ENABLED  BASIC
+                        3 AP_02                                                  40843    151  270.5 ENABLED  BASIC
+                        4 AP_03                                                  40751    151  269.9 ENABLED  BASIC
+                        5 AP_04                                                  40995    151  271.5 ENABLED  BASIC
+                        6 AP_05                                                  40994    151  271.5 ENABLED  BASIC
+                        7 AP_06                                                  41349    153  270.3 ENABLED  BASIC
+                        8 AP_07                                                  40864    151  270.6 ENABLED  BASIC
+                        9 AP_08                                                  40998    151  271.5 ENABLED  BASIC
+                       10 AP_09                                                  41205    152  271.1 ENABLED  BASIC
+                       11 AP_10                                                  40777    151  270.0 ENABLED  BASIC
+                       12 AP_11                                                  40635    150  270.9 ENABLED  BASIC
+                       13 AP_12                                                  41095    152  270.4 ENABLED  BASIC
+                       14 AP_CF                                                   1099     22   50.0 ENABLED  BASIC
+                                                                                533715   1989  268.3
+
+MV_LEDGER_2020          1 AP_BF                                                  44086    161  273.8 ENABLED  BASIC
+                        2 AP_01                                                  44234    162  273.0 ENABLED  BASIC
+                        3 AP_02                                                  43938    161  272.9 ENABLED  BASIC
+                        4 AP_03                                                  43946    161  273.0 ENABLED  BASIC
+                        5 AP_04                                                  44097    161  273.9 ENABLED  BASIC
+                        6 AP_05                                                  44080    161  273.8 ENABLED  BASIC
+                        7 AP_06                                                  44285    162  273.4 ENABLED  BASIC
+                        8 AP_07                                                      0      0        ENABLED  BASIC
+                        9 AP_08                                                      0      0        ENABLED  BASIC
+                       10 AP_09                                                      0      0        ENABLED  BASIC
+                       11 AP_10                                                      0      0        ENABLED  BASIC
+                       12 AP_11                                                      0      0        ENABLED  BASIC
+                       13 AP_12                                                      0      0        ENABLED  BASIC
+                       14 AP_CF                                                      0      0        ENABLED  BASIC
+                                                                                308666   1129  273.4
+
+PS_LEDGER               1 LEDGER_2018                                          1100000  17917   61.4 ENABLED  BASIC
+                        1                         1 LEDGER_2018_ACTUALS        1000000  16270   61.5 ENABLED  BASIC
+                        1                         2 LEDGER_2018_BUDGET          100000   1647   60.7 ENABLED  BASIC
+                        2 LEDGER_2019_BF                                         84422   1378   61.3 ENABLED  BASIC
+                        2                         1 LEDGER_2019_BF_ACTUALS       76793   1239   62.0 ENABLED  BASIC
+                        2                         2 LEDGER_2019_BF_BUDGET         7629    139   54.9 ENABLED  BASIC
+                        3 LEDGER_2019_01                                         84858   1386   61.2 ENABLED  BASIC
+                        3                         1 LEDGER_2019_01_ACTUALS       77128   1245   62.0 ENABLED  BASIC
+                        3                         2 LEDGER_2019_01_BUDGET         7730    141   54.8 ENABLED  BASIC
+                        4 LEDGER_2019_02                                         84148   1376   61.2 ENABLED  BASIC
+                        4                         1 LEDGER_2019_02_ACTUALS       76541   1237   61.9 ENABLED  BASIC
+                        4                         2 LEDGER_2019_02_BUDGET         7607    139   54.7 ENABLED  BASIC
+                        5 LEDGER_2019_03                                         83922   1370   61.3 ENABLED  BASIC
+                        5                         1 LEDGER_2019_03_ACTUALS       76278   1231   62.0 ENABLED  BASIC
+                        5                         2 LEDGER_2019_03_BUDGET         7644    139   55.0 ENABLED  BASIC
+                        6 LEDGER_2019_04                                         84550   1382   61.2 ENABLED  BASIC
+                        6                         1 LEDGER_2019_04_ACTUALS       76871   1242   61.9 ENABLED  BASIC
+                        6                         2 LEDGER_2019_04_BUDGET         7679    140   54.9 ENABLED  BASIC
+                        7 LEDGER_2019_05                                         84634   1382   61.2 ENABLED  BASIC
+                        7                         1 LEDGER_2019_05_ACTUALS       77054   1244   61.9 ENABLED  BASIC
+                        7                         2 LEDGER_2019_05_BUDGET         7580    138   54.9 ENABLED  BASIC
+                        8 LEDGER_2019_06                                         85192   1391   61.2 ENABLED  BASIC
+                        8                         1 LEDGER_2019_06_ACTUALS       77462   1250   62.0 ENABLED  BASIC
+                        8                         2 LEDGER_2019_06_BUDGET         7730    141   54.8 ENABLED  BASIC
+                        9 LEDGER_2019_07                                         84220   1376   61.2 ENABLED  BASIC
+                        9                         1 LEDGER_2019_07_ACTUALS       76490   1235   61.9 ENABLED  BASIC
+                        9                         2 LEDGER_2019_07_BUDGET         7730    141   54.8 ENABLED  BASIC
+                       10 LEDGER_2019_08                                         84532   1380   61.3 ENABLED  BASIC
+                       10                         1 LEDGER_2019_08_ACTUALS       76792   1239   62.0 ENABLED  BASIC
+                       10                         2 LEDGER_2019_08_BUDGET         7740    141   54.9 ENABLED  BASIC
+                       11 LEDGER_2019_09                                         84824   1384   61.3 ENABLED  BASIC
+                       11                         1 LEDGER_2019_09_ACTUALS       77159   1245   62.0 ENABLED  BASIC
+                       11                         2 LEDGER_2019_09_BUDGET         7665    139   55.1 ENABLED  BASIC
+                       12 LEDGER_2019_10                                         84062   1371   61.3 ENABLED  BASIC
+                       12                         1 LEDGER_2019_10_ACTUALS       76400   1232   62.0 ENABLED  BASIC
+                       12                         2 LEDGER_2019_10_BUDGET         7662    139   55.1 ENABLED  BASIC
+                       13 LEDGER_2019_11                                         83776   1368   61.2 ENABLED  BASIC
+                       13                         1 LEDGER_2019_11_ACTUALS       76121   1229   61.9 ENABLED  BASIC
+                       13                         2 LEDGER_2019_11_BUDGET         7655    139   55.1 ENABLED  BASIC
+                       14 LEDGER_2019_12                                         84660   1383   61.2 ENABLED  BASIC
+                       14                         1 LEDGER_2019_12_ACTUALS       76911   1242   61.9 ENABLED  BASIC
+                       14                         2 LEDGER_2019_12_BUDGET         7749    141   55.0 ENABLED  BASIC
+                       15 LEDGER_2019_CF                                          2200     63   34.9 ENABLED  BASIC
+                       15                         1 LEDGER_2019_CF_ACTUALS        2000     41   48.8 ENABLED  BASIC
+                       15                         2 LEDGER_2019_CF_BUDGET          200     22    9.1 ENABLED  BASIC
+                       16 LEDGER_2020_BF                                         84336   2188   38.5 DISABLED
+                       16                         1 LEDGER_2020_BF_ACTUALS       76747   1980   38.8 DISABLED
+                       16                         2 LEDGER_2020_BF_BUDGET         7589    208   36.5 DISABLED
+                       17 LEDGER_2020_01                                         84981   2230   38.1 DISABLED
+                       17                         1 LEDGER_2020_01_ACTUALS       77153   2013   38.3 DISABLED
+                       17                         2 LEDGER_2020_01_BUDGET         7828    217   36.1 DISABLED
+                       18 LEDGER_2020_02                                         84299   2212   38.1 DISABLED
+                       18                         1 LEDGER_2020_02_ACTUALS       76516   1996   38.3 DISABLED
+                       18                         2 LEDGER_2020_02_BUDGET         7783    216   36.0 DISABLED
+                       19 LEDGER_2020_03                                         84189   2209   38.1 DISABLED
+                       19                         1 LEDGER_2020_03_ACTUALS       76500   1996   38.3 DISABLED
+                       19                         2 LEDGER_2020_03_BUDGET         7689    213   36.1 DISABLED
+                       20 LEDGER_2020_04                                         84400   2215   38.1 DISABLED
+                       20                         1 LEDGER_2020_04_ACTUALS       76720   2002   38.3 DISABLED
+                       20                         2 LEDGER_2020_04_BUDGET         7680    213   36.1 DISABLED
+                       21 LEDGER_2020_05                                         84494   2217   38.1 DISABLED
+                       21                         1 LEDGER_2020_05_ACTUALS       76819   2004   38.3 DISABLED
+                       21                         2 LEDGER_2020_05_BUDGET         7675    213   36.0 DISABLED
+                       22 LEDGER_2020_06                                         84736   2223   38.1 DISABLED
+                       22                         1 LEDGER_2020_06_ACTUALS       77170   2013   38.3 DISABLED
+                       22                         2 LEDGER_2020_06_BUDGET         7566    210   36.0 DISABLED
+                       23 LEDGER_2020_07                                          7712    214   36.0 DISABLED
+                       23                         1 LEDGER_2020_07_ACTUALS           0      0        DISABLED
+                       23                         2 LEDGER_2020_07_BUDGET         7712    214   36.0 DISABLED
+                       24 LEDGER_2020_08                                          7608    211   36.1 DISABLED
+                       24                         1 LEDGER_2020_08_ACTUALS           0      0        DISABLED
+                       24                         2 LEDGER_2020_08_BUDGET         7608    211   36.1 DISABLED
+                       25 LEDGER_2020_09                                          7872    218   36.1 DISABLED
+                       25                         1 LEDGER_2020_09_ACTUALS           0      0        DISABLED
+                       25                         2 LEDGER_2020_09_BUDGET         7872    218   36.1 DISABLED
+                       26 LEDGER_2020_10                                          7575    211   35.9 DISABLED
+                       26                         1 LEDGER_2020_10_ACTUALS           0      0        DISABLED
+                       26                         2 LEDGER_2020_10_BUDGET         7575    211   35.9 DISABLED
+                       27 LEDGER_2020_11                                          7453    207   36.0 DISABLED
+                       27                         1 LEDGER_2020_11_ACTUALS           0      0        DISABLED
+                       27                         2 LEDGER_2020_11_BUDGET         7453    207   36.0 DISABLED
+                       28 LEDGER_2020_12                                          7770    215   36.1 DISABLED
+                       28                         1 LEDGER_2020_12_ACTUALS           0      0        DISABLED
+                       28                         2 LEDGER_2020_12_BUDGET         7770    215   36.1 DISABLED
+                       29 LEDGER_2020_CF                                           200     24    8.3 DISABLED
+                       29                         1 LEDGER_2020_CF_ACTUALS           0      0        DISABLED
+                       29                         2 LEDGER_2020_CF_BUDGET          200     24    8.3 DISABLED
+                       30 LEDGER_2021_BF                                          7701    211   36.5 DISABLED
+                       30                         1 LEDGER_2021_BF_ACTUALS           0      0        DISABLED
+                       30                         2 LEDGER_2021_BF_BUDGET         7701    211   36.5 DISABLED
+                       31 LEDGER_2021_01                                          7734    214   36.1 DISABLED
+                       31                         1 LEDGER_2021_01_ACTUALS           0      0        DISABLED
+                       31                         2 LEDGER_2021_01_BUDGET         7734    214   36.1 DISABLED
+                       32 LEDGER_2021_02                                          7697    214   36.0 DISABLED
+                       32                         1 LEDGER_2021_02_ACTUALS           0      0        DISABLED
+                       32                         2 LEDGER_2021_02_BUDGET         7697    214   36.0 DISABLED
+                       33 LEDGER_2021_03                                          7751    215   36.1 DISABLED
+                       33                         1 LEDGER_2021_03_ACTUALS           0      0        DISABLED
+                       33                         2 LEDGER_2021_03_BUDGET         7751    215   36.1 DISABLED
+                       34 LEDGER_2021_04                                          7719    214   36.1 DISABLED
+                       34                         1 LEDGER_2021_04_ACTUALS           0      0        DISABLED
+                       34                         2 LEDGER_2021_04_BUDGET         7719    214   36.1 DISABLED
+                       35 LEDGER_2021_05                                          7646    212   36.1 DISABLED
+                       35                         1 LEDGER_2021_05_ACTUALS           0      0        DISABLED
+                       35                         2 LEDGER_2021_05_BUDGET         7646    212   36.1 DISABLED
+                       36 LEDGER_2021_06                                          7727    214   36.1 DISABLED
+                       36                         1 LEDGER_2021_06_ACTUALS           0      0        DISABLED
+                       36                         2 LEDGER_2021_06_BUDGET         7727    214   36.1 DISABLED
+                       37 LEDGER_2021_07                                          7640    212   36.0 DISABLED
+                       37                         1 LEDGER_2021_07_ACTUALS           0      0        DISABLED
+                       37                         2 LEDGER_2021_07_BUDGET         7640    212   36.0 DISABLED
+                       38 LEDGER_2021_08                                          7466    208   35.9 DISABLED
+                       38                         1 LEDGER_2021_08_ACTUALS           0      0        DISABLED
+                       38                         2 LEDGER_2021_08_BUDGET         7466    208   35.9 DISABLED
+                       39 LEDGER_2021_09                                          7660    213   36.0 DISABLED
+                       39                         1 LEDGER_2021_09_ACTUALS           0      0        DISABLED
+                       39                         2 LEDGER_2021_09_BUDGET         7660    213   36.0 DISABLED
+                       40 LEDGER_2021_10                                          7747    215   36.0 DISABLED
+                       40                         1 LEDGER_2021_10_ACTUALS           0      0        DISABLED
+                       40                         2 LEDGER_2021_10_BUDGET         7747    215   36.0 DISABLED
+                       41 LEDGER_2021_11                                          7561    210   36.0 DISABLED
+                       41                         1 LEDGER_2021_11_ACTUALS           0      0        DISABLED
+                       41                         2 LEDGER_2021_11_BUDGET         7561    210   36.0 DISABLED
+                       42 LEDGER_2021_12                                          7751    215   36.1 DISABLED
+                       42                         1 LEDGER_2021_12_ACTUALS           0      0        DISABLED
+                       42                         2 LEDGER_2021_12_BUDGET         7751    215   36.1 DISABLED
+                       43 LEDGER_2021_CF                                           200     24    8.3 DISABLED
+                       43                         1 LEDGER_2021_CF_ACTUALS           0      0        DISABLED
+                       43                         2 LEDGER_2021_CF_BUDGET          200     24    8.3 DISABLED
+                                                                               2937625  55492   52.9
+
+
+160 rows selected.
+
+Elapsed: 00:00:00.09
+SQL> 
+SQL> @@mvsql
+SQL> REM mvsql.sql
+SQL> set autotrace off
+SQL> 
+SQL> REM 2018
+SQL> set lines 200 pages 999
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2018
+  9  AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 6
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.14
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 489184802
+
+---------------------------------------------------------------------------------------------------------------
+| Id  | Operation                 | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+---------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT          |                   |  1339 |   121K|  4425   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY            |                   |  1339 |   121K|  4425   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN               |                   |  1339 |   121K|  4424   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN       | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN              |                   |  5596 |   404K|  4422   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN  |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN     | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT          |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN    | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE SINGLE|                   | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+|  10 |      PARTITION LIST SINGLE|                   | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL   | PS_LEDGER         | 72673 |  3193K|  4419   (1)| 00:00:01 |     1 |     1 |
+---------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=6 AND "A"."FISCAL_YEAR"=2018 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![C
+        DATA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![C
+        DATA[L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.12
+SQL> REM spool off
+SQL> 
+SQL> REM 2019
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2019
+  9  AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 6
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.14
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 346876754
+
+-----------------------------------------------------------------------------------------------------------------
+| Id  | Operation                   | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+-----------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |                   |   492 | 45756 |  2036   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY              |                   |   492 | 45756 |  2036   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN                 |                   |   492 | 45756 |  2035   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN         | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN                |                   |  2055 |   148K|  2033   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN    |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN       | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT            |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN      | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE ITERATOR|                   | 26686 |  1172K|  2030   (1)| 00:00:01 |     3 |     8 |
+|  10 |      PARTITION LIST SINGLE  |                   | 26686 |  1172K|  2030   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL     | PS_LEDGER         | 26686 |  1172K|  2030   (1)| 00:00:01 |   KEY |   KEY |
+-----------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=6 AND "A"."FISCAL_YEAR"=2019 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDA
+        TA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA
+        [L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.11
+SQL> REM spool off
+SQL> 
+SQL> REM 2020
+SQL> explain plan for
+  2  SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
+  3  FROM   PS_LEDGER A
+  4  ,	    PSTREESELECT05 L1
+  5  ,	    PSTREESELECT10 L
+  6  ,	    PSTREESELECT10 L2
+  7  WHERE  A.LEDGER='ACTUALS'
+  8  AND    A.FISCAL_YEAR=2020
+  9  AND    (A.ACCOUNTING_PERIOD BETWEEN 1 AND 6)
+ 10  AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
+ 11  AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
+ 12  AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
+ 13  AND    A.CURRENCY_CD='GBP'
+ 14  GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
+ 15  /
+
+Explained.
+
+Elapsed: 00:00:00.13
+SQL> @@xp
+SQL> REM xp.sql
+SQL> REM spool xp
+SQL> REM set pages 9999 lines 200 autotrace off
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED -PROJECTION +ADAPTIVE'));
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 346876754
+
+-----------------------------------------------------------------------------------------------------------------
+| Id  | Operation                   | Name              | Rows  | Bytes | Cost (%CPU)| Time     | Pstart| Pstop |
+-----------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |                   |   492 | 45756 |  3281   (1)| 00:00:01 |       |       |
+|   1 |  HASH GROUP BY              |                   |   492 | 45756 |  3281   (1)| 00:00:01 |       |       |
+|*  2 |   HASH JOIN                 |                   |   492 | 45756 |  3280   (1)| 00:00:01 |       |       |
+|*  3 |    INDEX RANGE SCAN         | PS_PSTREESELECT10 |   239 |  4541 |     2   (0)| 00:00:01 |       |       |
+|*  4 |    HASH JOIN                |                   |  2055 |   148K|  3278   (1)| 00:00:01 |       |       |
+|   5 |     MERGE JOIN CARTESIAN    |                   |   154 |  4466 |     3   (0)| 00:00:01 |       |       |
+|*  6 |      INDEX RANGE SCAN       | PS_PSTREESELECT05 |     2 |    22 |     1   (0)| 00:00:01 |       |       |
+|   7 |      BUFFER SORT            |                   |    77 |  1386 |     2   (0)| 00:00:01 |       |       |
+|*  8 |       INDEX RANGE SCAN      | PS_PSTREESELECT10 |    77 |  1386 |     1   (0)| 00:00:01 |       |       |
+|   9 |     PARTITION RANGE ITERATOR|                   | 26686 |  1172K|  3275   (1)| 00:00:01 |    17 |    22 |
+|  10 |      PARTITION LIST SINGLE  |                   | 26686 |  1172K|  3275   (1)| 00:00:01 |     1 |     1 |
+|* 11 |       TABLE ACCESS FULL     | PS_LEDGER         | 26686 |  1172K|  3275   (1)| 00:00:01 |   KEY |   KEY |
+-----------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1
+   3 - SEL$1 / L2@SEL$1
+   6 - SEL$1 / L1@SEL$1
+   8 - SEL$1 / L@SEL$1
+  11 - SEL$1 / A@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      USE_HASH_AGGREGATION(@"SEL$1")
+      SWAP_JOIN_INPUTS(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "L2"@"SEL$1")
+      USE_HASH(@"SEL$1" "A"@"SEL$1")
+      USE_MERGE_CARTESIAN(@"SEL$1" "L"@"SEL$1")
+      LEADING(@"SEL$1" "L1"@"SEL$1" "L"@"SEL$1" "A"@"SEL$1" "L2"@"SEL$1")
+      INDEX(@"SEL$1" "L2"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      FULL(@"SEL$1" "A"@"SEL$1")
+      INDEX(@"SEL$1" "L"@"SEL$1" ("PSTREESELECT10"."SELECTOR_NUM" "PSTREESELECT10"."TREE_NODE_NUM"
+              "PSTREESELECT10"."RANGE_FROM_10"))
+      INDEX(@"SEL$1" "L1"@"SEL$1" ("PSTREESELECT05"."SELECTOR_NUM" "PSTREESELECT05"."TREE_NODE_NUM"
+              "PSTREESELECT05"."RANGE_FROM_05"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"."ACCOUNT"="L2"."RANGE_FROM_10")
+   3 - access("L2"."SELECTOR_NUM"=30984)
+   4 - access("A"."BUSINESS_UNIT"="L1"."RANGE_FROM_05" AND "A"."CHARTFIELD1"="L"."RANGE_FROM_10")
+   6 - access("L1"."SELECTOR_NUM"=30982)
+   8 - access("L"."SELECTOR_NUM"=30985)
+  11 - filter("A"."ACCOUNTING_PERIOD"<=6 AND "A"."FISCAL_YEAR"=2020 AND "A"."ACCOUNTING_PERIOD">=1 AND
+              "A"."CURRENCY_CD"='GBP')
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[A]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDA
+        TA[L]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA[L1]]></t><s><![CDATA[SEL$1]]></s></h><h><t><![CDATA
+        [L2]]></t><s><![CDATA[SEL$1]]></s></h></f></q>
+
+
+72 rows selected.
+
+Elapsed: 00:00:00.14
+SQL> REM spool off
+SQL> set autotrace off
+SQL> @@mvcap
+SQL> REM mvcap.sql
+SQL> REM spool mvcap
+SQL> set autotrace off
+SQL> create table MV_CAPABILITIES_TABLE
+  2  (
+  3    statement_id	 varchar(30) ,
+  4    mvowner		 varchar(30) ,
+  5    mvname		 varchar(30) ,
+  6    capability_name	 varchar(30) ,
+  7    possible 	 character(1) ,
+  8    related_text	 varchar(2000) ,
+  9    related_num	 number ,
+ 10    msgno		 integer ,
+ 11    msgtxt		 varchar(2000) ,
+ 12    seq		 number
+ 13  ) ;
+create table MV_CAPABILITIES_TABLE
+             *
+ERROR at line 1:
+ORA-00955: name is already used by an existing object
+
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> truncate table MV_CAPABILITIES_TABLE;
+
+Table truncated.
+
+Elapsed: 00:00:00.04
+SQL> EXECUTE DBMS_MVIEW.EXPLAIN_MVIEW ('SCOTT.MV_LEDGER_2019');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.05
+SQL> EXECUTE DBMS_MVIEW.EXPLAIN_MVIEW ('SCOTT.MV_LEDGER_2020');
+
+PL/SQL procedure successfully completed.
+
+Elapsed: 00:00:00.04
+SQL> break on mvname skip 1
+SQL> column rel_text format a20
+SQL> column msgtxt format a60
+SQL> SELECT mvname, capability_name,  possible, SUBSTR(related_text,1,20) AS rel_text, SUBSTR(msgtxt,1,60) AS msgtxt
+  2  FROM MV_CAPABILITIES_TABLE
+  3  WHERE mvname like 'MV_LEDGER_20%'
+  4  ORDER BY mvname, seq;
+
+MVNAME                         CAPABILITY_NAME                P REL_TEXT             MSGTXT
+------------------------------ ------------------------------ - -------------------- ------------------------------------------------------------
+MV_LEDGER_2019                 PCT                            N
+                               REFRESH_COMPLETE               Y
+                               REFRESH_FAST                   N
+                               REWRITE                        Y
+                               PCT_TABLE                      N PS_LEDGER            PCT not supported with multi-column partition key
+                               REFRESH_FAST_AFTER_INSERT      N SCOTT.PS_LEDGER      the detail table does not have a materialized view log
+                               REFRESH_FAST_AFTER_ONETAB_DML  N POSTED_TOTAL_AMT     SUM(expr) without COUNT(expr)
+                               REFRESH_FAST_AFTER_ONETAB_DML  N                      see the reason why REFRESH_FAST_AFTER_INSERT is disabled
+                               REFRESH_FAST_AFTER_ONETAB_DML  N                      COUNT(*) is not present in the select list
+                               REFRESH_FAST_AFTER_ONETAB_DML  N                      SUM(expr) without COUNT(expr)
+                               REFRESH_FAST_AFTER_ANY_DML     N                      see the reason why REFRESH_FAST_AFTER_ONETAB_DML is disabled
+                               REFRESH_FAST_PCT               N                      PCT is not possible on any of the detail tables in the mater
+                               REWRITE_FULL_TEXT_MATCH        Y
+                               REWRITE_PARTIAL_TEXT_MATCH     Y
+                               REWRITE_GENERAL                Y
+                               REWRITE_PCT                    N                      general rewrite is not possible or PCT is not possible on an
+                               PCT_TABLE_REWRITE              N PS_LEDGER            PCT not supported with multi-column partition key
+
+MV_LEDGER_2020                 PCT                            N
+                               REFRESH_COMPLETE               Y
+                               REFRESH_FAST                   N
+                               REWRITE                        Y
+                               PCT_TABLE                      N PS_LEDGER            PCT not supported with multi-column partition key
+                               REFRESH_FAST_AFTER_INSERT      N SCOTT.PS_LEDGER      the detail table does not have a materialized view log
+                               REFRESH_FAST_AFTER_ONETAB_DML  N POSTED_TOTAL_AMT     SUM(expr) without COUNT(expr)
+                               REFRESH_FAST_AFTER_ONETAB_DML  N                      see the reason why REFRESH_FAST_AFTER_INSERT is disabled
+                               REFRESH_FAST_AFTER_ONETAB_DML  N                      COUNT(*) is not present in the select list
+                               REFRESH_FAST_AFTER_ONETAB_DML  N                      SUM(expr) without COUNT(expr)
+                               REFRESH_FAST_AFTER_ANY_DML     N                      see the reason why REFRESH_FAST_AFTER_ONETAB_DML is disabled
+                               REFRESH_FAST_PCT               N                      PCT is not possible on any of the detail tables in the mater
+                               REWRITE_FULL_TEXT_MATCH        Y
+                               REWRITE_PARTIAL_TEXT_MATCH     Y
+                               REWRITE_GENERAL                Y
+                               REWRITE_PCT                    N                      general rewrite is not possible or PCT is not possible on an
+                               PCT_TABLE_REWRITE              N PS_LEDGER            PCT not supported with multi-column partition key
+
+
+34 rows selected.
+
+Elapsed: 00:00:00.01
+SQL> 
+SQL> REM spool off
+SQL> spool off
