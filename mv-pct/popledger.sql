@@ -7,16 +7,16 @@ exec dbms_stats.set_table_prefs('SCOTT','PS_LEDGER','GRANULARITY','ALL');
 
 ALTER TABLE PS_LEDGER PARALLEL 8 NOLOGGING;
 
-CREATE UNIQUE INDEX ps_ledger ON ps_ledger
+/*CREATE UNIQUE INDEX ps_ledger ON ps_ledger
 (business_unit,ledger,account,altacct,deptid
 ,operating_unit,product,fund_code,class_fld,program_code
 ,budget_ref,affiliate,affiliate_intra1,affiliate_intra2,chartfield1
-,chartfield2,chartfield3,project_id,book_code,gl_adjust_type
-/*,date_code*/,currency_cd,statistics_code,fiscal_year,accounting_period
+,chartfield2,chartfield3,project_id,book_code,gl_adjust_type--,date_code
+,currency_cd,statistics_code,fiscal_year,accounting_period
 ) COMPRESS 2 NOPARALLEL
-/
+*/
 
-insert /*+APPEND PARALLEL ENABLE_PARALLEL_DML NO_GATHER_OPTIMIZER_STATISTICS ignore_row_on_dupkey_index(l)*/ into ps_ledger l
+insert /*+APPEND PARALLEL ENABLE_PARALLEL_DML NO_GATHER_OPTIMIZER_STATISTICS*//*ignore_row_on_dupkey_index(PS_LEDGER)*/ INTO ps_ledger
 with n as (
 SELECT rownum n from dual connect by level <= 1e2
 ), fy as (
@@ -69,8 +69,8 @@ CREATE /*UNIQUE*/ INDEX ps_ledger ON ps_ledger
 (business_unit,ledger,account,altacct,deptid
 ,operating_unit,product,fund_code,class_fld,program_code
 ,budget_ref,affiliate,affiliate_intra1,affiliate_intra2,chartfield1
-,chartfield2,chartfield3,project_id,book_code,gl_adjust_type
-/*,date_code*/,currency_cd,statistics_code,fiscal_year,accounting_period
+,chartfield2,chartfield3,project_id,book_code,gl_adjust_type--,date_code
+,currency_cd,statistics_code,fiscal_year,accounting_period
 ) COMPRESS 2 NOPARALLEL NOLOGGING
 /
 
@@ -137,20 +137,5 @@ exec dbms_stats.gather_table_stats('SCOTT','PSTREESELECT05');
 exec dbms_stats.gather_table_stats('SCOTT','PSTREESELECT10');
 
 ALTER TABLE PS_LEDGER NOPARALLEL;
-
-/*explain plan for 
-SELECT L.TREE_NODE_NUM,L2.TREE_NODE_NUM,SUM(A.POSTED_TOTAL_AMT)
-FROM   PS_LEDGER A
-,      PSTREESELECT05 L1
-,      PSTREESELECT10 L
-,      PSTREESELECT10 L2
-WHERE  A.LEDGER='ACTUALS'
-AND    A.FISCAL_YEAR=2020
-AND    A.ACCOUNTING_PERIOD BETWEEN 1 AND 2
-AND    L1.SELECTOR_NUM=30982 AND A.BUSINESS_UNIT=L1.RANGE_FROM_05
-AND    L.SELECTOR_NUM=30985 AND A.CHARTFIELD1=L.RANGE_FROM_10
-AND    L2.SELECTOR_NUM=30984 AND A.ACCOUNT=L2.RANGE_FROM_10
-AND    A.CURRENCY_CD='GBP'
-GROUP BY L.TREE_NODE_NUM,L2.TREE_NODE_NUM
-/
-@@xp*/
+ALTER TABLE PSTREESELECT05 NOPARALLEL;
+ALTER TABLE PSTREESELECT10 NOPARALLEL;
