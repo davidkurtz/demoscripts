@@ -1,0 +1,627 @@
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>set pages 9999 lines 200 autotrace off trimspool on echo on
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>column name format a30
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>column category format a10
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>column created format a30
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>column last_modified format a30
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>column task_exec_name format a20
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>column signature format 99999999999999999999
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>column description format a20
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>DROP TABLE t PURGE;
+DROP TABLE t PURGE
+           *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>exec dbms_sqltune.drop_sql_profile('clashing_profile_test_force',TRUE);
+
+PL/SQL procedure successfully completed.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>exec dbms_sqltune.drop_sql_profile('clashing_profile_test_exact',TRUE);
+
+PL/SQL procedure successfully completed.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from dba_sql_profiles where name like 'clashing%';
+
+no rows selected
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>CREATE TABLE t (a not null, b) AS
+  2  SELECT rownum, ceil(sqrt(rownum))
+  3  FROM dual
+  4  connect by level <= 100
+  5  /
+
+Table created.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>create unique index t_idx on t(a)
+  2  /
+
+Index created.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>create index t_idx2 on t(b,a)
+  2  /
+
+Index created.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>exec dbms_stats.gather_table_stats(user,'T');
+
+PL/SQL procedure successfully completed.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>ttitle 'Default Execution plan without profiles (skip scan)'
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from dba_sql_profiles where name like 'clashing%';
+
+no rows selected
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>explain plan for
+  2  SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'))
+  2  /
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                          Default Execution plan without profiles (skip scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3418618943
+
+---------------------------------------------------------------------------
+| Id  | Operation        | Name   | Rows  | Bytes | Cost (%CPU)| Time     |
+---------------------------------------------------------------------------
+|   0 | SELECT STATEMENT |        |     1 |     6 |     1   (0)| 00:00:01 |
+|*  1 |  INDEX SKIP SCAN | T_IDX2 |     1 |     6 |     1   (0)| 00:00:01 |
+---------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      INDEX_SS(@"SEL$1" "T"@"SEL$1" ("T"."B" "T"."A"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      OPT_PARAM('_fix_control' '12388221:0')
+      OPT_PARAM('_optimizer_cost_based_transformation' 'off')
+      OPT_PARAM('_unnest_subquery' 'false')
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - access("A"=42)
+       filter("A"=42)
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![C
+        DATA[SEL$1]]></s></h></f></q>
+
+
+43 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>----------------------------------------------------------------------------------------------------
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>DECLARE
+  2  signature INTEGER;
+  3  sql_txt CLOB;
+  4  h	     SYS.SQLPROF_ATTR;
+  5  BEGIN
+  6  sql_txt := q'[
+  7  SELECT * FROM t WHERE a = 54
+  8  ]';
+  9  h := SYS.SQLPROF_ATTR(
+ 10  q'[BEGIN_OUTLINE_DATA]',
+ 11  q'[IGNORE_OPTIM_EMBEDDED_HINTS]',
+ 12  q'[FULL(@"SEL$1" "T"@"SEL$1")]',
+ 13  q'[END_OUTLINE_DATA]');
+ 14  signature := DBMS_SQLTUNE.SQLTEXT_TO_SIGNATURE(sql_txt);
+ 15  DBMS_SQLTUNE.IMPORT_SQL_PROFILE (
+ 16  sql_text	 => sql_txt,
+ 17  profile	 => h,
+ 18  name	 => 'clashing_profile_test_force',
+ 19  category	 => 'DEFAULT',
+ 20  validate	 => TRUE,
+ 21  replace	 => TRUE,
+ 22  force_match => TRUE
+ 23  );
+ 24  END;
+ 25  /
+
+PL/SQL procedure successfully completed.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>ttitle 'Execution plan with force matching profile (full scan)'
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from dba_sql_profiles where name like 'clashing%';
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                         Execution plan with force matching profile (full scan)
+
+NAME                           CATEGORY               SIGNATURE SQL_TEXT                                                                         CREATED
+------------------------------ ---------- --------------------- -------------------------------------------------------------------------------- ------------------------------
+LAST_MODIFIED                  DESCRIPTION          TYPE    STATUS   FOR    TASK_ID TASK_EXEC_NAME       TASK_OBJ_ID TASK_FND_ID TASK_REC_ID TASK_CON_DBID
+------------------------------ -------------------- ------- -------- --- ---------- -------------------- ----------- ----------- ----------- -------------
+clashing_profile_test_force    DEFAULT     11431056000319719221                                                                                  27-JUL-21 02.57.08.390801 PM
+                                                                SELECT * FROM t WHERE a = 54
+27-JUL-21 02.57.08.000000 PM                        MANUAL  ENABLED  YES
+
+
+1 row selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>explain plan for
+  2  SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'))
+  2  /
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                         Execution plan with force matching profile (full scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1601196873
+
+----------------------------------------------------------------------------------
+| Id  | Operation                 | Name | Rows  | Bytes | Cost (%CPU)| Time     |
+----------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT          |      |     1 |     6 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS STORAGE FULL| T    |     1 |     6 |     3   (0)| 00:00:01 |
+----------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      FULL(@"SEL$1" "T"@"SEL$1")
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      OPT_PARAM('_fix_control' '12388221:0')
+      OPT_PARAM('_optimizer_cost_based_transformation' 'off')
+      OPT_PARAM('_unnest_subquery' 'false')
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - storage("A"=42)
+       filter("A"=42)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  FULL(@"SEL$1" "T"@"SEL$1")
+
+Note
+-----
+   - SQL profile "clashing_profile_test_force" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![CDA
+        TA[SEL$1]]></s></h></f></q>
+
+
+57 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>----------------------------------------------------------------------------------------------------
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>DECLARE
+  2  signature INTEGER;
+  3  sql_txt CLOB;
+  4  h	     SYS.SQLPROF_ATTR;
+  5  BEGIN
+  6  sql_txt := q'[
+  7  SELECT * FROM t WHERE a = 42
+  8  ]';
+  9  h := SYS.SQLPROF_ATTR(
+ 10  q'[BEGIN_OUTLINE_DATA]',
+ 11  q'[IGNORE_OPTIM_EMBEDDED_HINTS]',
+ 12  q'[INDEX(@"SEL$1" "T"@"SEL$1" ("T"."A"))]',
+ 13  q'[END_OUTLINE_DATA]');
+ 14  signature := DBMS_SQLTUNE.SQLTEXT_TO_SIGNATURE(sql_txt);
+ 15  DBMS_SQLTUNE.IMPORT_SQL_PROFILE (
+ 16  sql_text	 => sql_txt,
+ 17  profile	 => h,
+ 18  name	 => 'clashing_profile_test_exact',
+ 19  category	 => 'DEFAULT',
+ 20  validate	 => TRUE,
+ 21  replace	 => TRUE,
+ 22  force_match => FALSE
+ 23  );
+ 24  END;
+ 25  /
+
+PL/SQL procedure successfully completed.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>ttitle 'Execution plan with force matching profile (unique index lookup)'
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from dba_sql_profiles where name like 'clashing%';
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                    Execution plan with force matching profile (unique index lookup)
+
+NAME                           CATEGORY               SIGNATURE SQL_TEXT                                                                         CREATED
+------------------------------ ---------- --------------------- -------------------------------------------------------------------------------- ------------------------------
+LAST_MODIFIED                  DESCRIPTION          TYPE    STATUS   FOR    TASK_ID TASK_EXEC_NAME       TASK_OBJ_ID TASK_FND_ID TASK_REC_ID TASK_CON_DBID
+------------------------------ -------------------- ------- -------- --- ---------- -------------------- ----------- ----------- ----------- -------------
+clashing_profile_test_exact    DEFAULT     14843900676141266266                                                                                  27-JUL-21 02.57.11.343291 PM
+                                                                SELECT * FROM t WHERE a = 42
+27-JUL-21 02.57.11.000000 PM                        MANUAL  ENABLED  NO
+
+clashing_profile_test_force    DEFAULT     11431056000319719221                                                                                  27-JUL-21 02.57.08.390801 PM
+                                                                SELECT * FROM t WHERE a = 54
+27-JUL-21 02.57.08.000000 PM                        MANUAL  ENABLED  YES
+
+
+2 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>explain plan for
+  2  SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'))
+  2  /
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                    Execution plan with force matching profile (unique index lookup)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 2929955852
+
+-------------------------------------------------------------------------------------
+| Id  | Operation                   | Name  | Rows  | Bytes | Cost (%CPU)| Time     |
+-------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |       |     1 |     6 |     1   (0)| 00:00:01 |
+|   1 |  TABLE ACCESS BY INDEX ROWID| T     |     1 |     6 |     1   (0)| 00:00:01 |
+|*  2 |   INDEX UNIQUE SCAN         | T_IDX |     1 |       |     0   (0)| 00:00:01 |
+-------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+   2 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      INDEX_RS_ASC(@"SEL$1" "T"@"SEL$1" ("T"."A"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      OPT_PARAM('_fix_control' '12388221:0')
+      OPT_PARAM('_optimizer_cost_based_transformation' 'off')
+      OPT_PARAM('_unnest_subquery' 'false')
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"=42)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  INDEX(@"SEL$1" "T"@"SEL$1" ("T"."A"))
+
+Note
+-----
+   - SQL profile "clashing_profile_test_exact" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![CDATA[
+        SEL$1]]></s></h></f></q>
+
+
+58 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>----------------------------------------------------------------------------------------------------
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>ttitle 'Execution plan with force matching profile (full scan)'
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>explain plan for
+  2  SELECT * FROM t WHERE a = 54;
+
+Explained.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'))
+  2  /
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                         Execution plan with force matching profile (full scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1601196873
+
+----------------------------------------------------------------------------------
+| Id  | Operation                 | Name | Rows  | Bytes | Cost (%CPU)| Time     |
+----------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT          |      |     1 |     6 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS STORAGE FULL| T    |     1 |     6 |     3   (0)| 00:00:01 |
+----------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      FULL(@"SEL$1" "T"@"SEL$1")
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      OPT_PARAM('_fix_control' '12388221:0')
+      OPT_PARAM('_optimizer_cost_based_transformation' 'off')
+      OPT_PARAM('_unnest_subquery' 'false')
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - storage("A"=54)
+       filter("A"=54)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  FULL(@"SEL$1" "T"@"SEL$1")
+
+Note
+-----
+   - SQL profile "clashing_profile_test_force" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![CDA
+        TA[SEL$1]]></s></h></f></q>
+
+
+57 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>----------------------------------------------------------------------------------------------------
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>ttitle 'Disable Exact Profile - Execution plan with no profile (skip scan) - Odd'
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>exec dbms_sqltune.alter_sql_profile(name=>'clashing_profile_test_exact', attribute_name=>'STATUS',value=>'DISABLED');
+
+PL/SQL procedure successfully completed.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from dba_sql_profiles where name like 'clashing%';
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                Disable Exact Profile - Execution plan with no profile (skip scan) - Odd
+
+NAME                           CATEGORY               SIGNATURE SQL_TEXT                                                                         CREATED
+------------------------------ ---------- --------------------- -------------------------------------------------------------------------------- ------------------------------
+LAST_MODIFIED                  DESCRIPTION          TYPE    STATUS   FOR    TASK_ID TASK_EXEC_NAME       TASK_OBJ_ID TASK_FND_ID TASK_REC_ID TASK_CON_DBID
+------------------------------ -------------------- ------- -------- --- ---------- -------------------- ----------- ----------- ----------- -------------
+clashing_profile_test_exact    DEFAULT     14843900676141266266                                                                                  27-JUL-21 02.57.11.343291 PM
+                                                                SELECT * FROM t WHERE a = 42
+27-JUL-21 02.57.19.000000 PM                        MANUAL  DISABLED NO
+
+clashing_profile_test_force    DEFAULT     11431056000319719221                                                                                  27-JUL-21 02.57.08.390801 PM
+                                                                SELECT * FROM t WHERE a = 54
+27-JUL-21 02.57.08.000000 PM                        MANUAL  ENABLED  YES
+
+
+2 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>explain plan for
+  2  SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'))
+  2  /
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                                Disable Exact Profile - Execution plan with no profile (skip scan) - Odd
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3418618943
+
+---------------------------------------------------------------------------
+| Id  | Operation        | Name   | Rows  | Bytes | Cost (%CPU)| Time     |
+---------------------------------------------------------------------------
+|   0 | SELECT STATEMENT |        |     1 |     6 |     1   (0)| 00:00:01 |
+|*  1 |  INDEX SKIP SCAN | T_IDX2 |     1 |     6 |     1   (0)| 00:00:01 |
+---------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      INDEX_SS(@"SEL$1" "T"@"SEL$1" ("T"."B" "T"."A"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      OPT_PARAM('_fix_control' '12388221:0')
+      OPT_PARAM('_optimizer_cost_based_transformation' 'off')
+      OPT_PARAM('_unnest_subquery' 'false')
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - access("A"=42)
+       filter("A"=42)
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![C
+        DATA[SEL$1]]></s></h></f></q>
+
+
+43 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>----------------------------------------------------------------------------------------------------
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>ttitle 'Change Category of Exact Profile - Execution plan with force matching profile (full scan)'
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>--exec dbms_sqltune.drop_sql_profile('clashing_profile_test_exact',TRUE);
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>exec dbms_sqltune.alter_sql_profile(name=>'clashing_profile_test_exact', attribute_name=>'CATEGORY',value=>'DO_NOT_USE');
+
+PL/SQL procedure successfully completed.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from dba_sql_profiles where name like 'clashing%';
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                       Change Category of Exact Profile - Execution plan with force matching profile (full scan)
+
+NAME                           CATEGORY               SIGNATURE SQL_TEXT                                                                         CREATED
+------------------------------ ---------- --------------------- -------------------------------------------------------------------------------- ------------------------------
+LAST_MODIFIED                  DESCRIPTION          TYPE    STATUS   FOR    TASK_ID TASK_EXEC_NAME       TASK_OBJ_ID TASK_FND_ID TASK_REC_ID TASK_CON_DBID
+------------------------------ -------------------- ------- -------- --- ---------- -------------------- ----------- ----------- ----------- -------------
+clashing_profile_test_exact    DO_NOT_USE  14843900676141266266                                                                                  27-JUL-21 02.57.11.343291 PM
+                                                                SELECT * FROM t WHERE a = 42
+27-JUL-21 02.57.19.000000 PM                        MANUAL  DISABLED NO
+
+clashing_profile_test_force    DEFAULT     11431056000319719221                                                                                  27-JUL-21 02.57.08.390801 PM
+                                                                SELECT * FROM t WHERE a = 54
+27-JUL-21 02.57.08.000000 PM                        MANUAL  ENABLED  YES
+
+
+2 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>explain plan for
+  2  SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'))
+  2  /
+
+Tue Jul 27                                                                                                                                                                                     page    1
+                                                       Change Category of Exact Profile - Execution plan with force matching profile (full scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1601196873
+
+----------------------------------------------------------------------------------
+| Id  | Operation                 | Name | Rows  | Bytes | Cost (%CPU)| Time     |
+----------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT          |      |     1 |     6 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS STORAGE FULL| T    |     1 |     6 |     3   (0)| 00:00:01 |
+----------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      FULL(@"SEL$1" "T"@"SEL$1")
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      OPT_PARAM('_fix_control' '12388221:0')
+      OPT_PARAM('_optimizer_cost_based_transformation' 'off')
+      OPT_PARAM('_unnest_subquery' 'false')
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - storage("A"=42)
+       filter("A"=42)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  FULL(@"SEL$1" "T"@"SEL$1")
+
+Note
+-----
+   - SQL profile "clashing_profile_test_force" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![CDA
+        TA[SEL$1]]></s></h></f></q>
+
+
+57 rows selected.
+
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>----------------------------------------------------------------------------------------------------
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>
+PSOFT-SNYXPT10.2749:394191.QENGL010.QENGL010.ora>spool off
