@@ -1,5 +1,4 @@
 REM clashing_profile_test.sql
-REM see https://blog.go-faster.co.uk/2021/07/clashing-sql-profiles.html
 spool clashing_profile_test
 set pages 9999 lines 200 autotrace off trimspool on echo on
 column name format a30
