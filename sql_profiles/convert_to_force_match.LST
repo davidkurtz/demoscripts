@@ -1,0 +1,586 @@
+SQL> clear screen
+
+SQL> set pages 9999 lines 200 autotrace off trimspool on echo on
+SQL> column name format a30
+SQL> column category format a10
+SQL> column created format a30
+SQL> column last_modified format a30
+SQL> column task_exec_name format a20
+SQL> column signature format 99999999999999999999
+SQL> column description format a20
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> DROP TABLE stage PURGE;
+
+Table dropped.
+
+SQL> DROP TABLE t PURGE;
+
+Table dropped.
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_sql_profile',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_old_sql_profile',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_sql_profile_force',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> CREATE TABLE t (a not null, b) AS
+  2  SELECT rownum, ceil(sqrt(rownum)) FROM dual connect by level <= 100;
+
+Table created.
+
+SQL> create unique index t_idx on t(a);
+
+Index created.
+
+SQL> exec dbms_stats.gather_table_stats(user,'T');
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> ttitle off
+SQL> select * from dba_sql_profiles where name like 'my%sql_profile%';
+
+no rows selected
+
+SQL> explain plan for SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+SQL> ttitle 'Default Execution plan without profiles (index scan)'
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'));
+
+Sat Jul 31                                                                                                                                                                                     page    1
+                                                                          Default Execution plan without profiles (index scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 2929955852
+
+-------------------------------------------------------------------------------------
+| Id  | Operation                   | Name  | Rows  | Bytes | Cost (%CPU)| Time     |
+-------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |       |     1 |     6 |     1   (0)| 00:00:01 |
+|   1 |  TABLE ACCESS BY INDEX ROWID| T     |     1 |     6 |     1   (0)| 00:00:01 |
+|*  2 |   INDEX UNIQUE SCAN         | T_IDX |     1 |       |     0   (0)| 00:00:01 |
+-------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+   2 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      INDEX_RS_ASC(@"SEL$1" "T"@"SEL$1" ("T"."A"))
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("A"=42)
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![CDATA[
+        SEL$1]]></s></h></f></q>
+
+
+41 rows selected.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> DECLARE
+  2  signature INTEGER;
+  3  sql_txt CLOB;
+  4  h	     SYS.SQLPROF_ATTR;
+  5  BEGIN
+  6  sql_txt := q'[
+  7  SELECT * FROM t WHERE a = 54
+  8  ]';
+  9  h := SYS.SQLPROF_ATTR(
+ 10  q'[BEGIN_OUTLINE_DATA]',
+ 11  q'[IGNORE_OPTIM_EMBEDDED_HINTS]',
+ 12  q'[FULL(@"SEL$1" "T"@"SEL$1")]',
+ 13  q'[END_OUTLINE_DATA]');
+ 14  signature := DBMS_SQLTUNE.SQLTEXT_TO_SIGNATURE(sql_txt);
+ 15  DBMS_SQLTUNE.IMPORT_SQL_PROFILE (
+ 16  sql_text	 => sql_txt,
+ 17  profile	 => h,
+ 18  name	 => 'my_sql_profile',
+ 19  category	 => 'DEFAULT',
+ 20  validate	 => TRUE,
+ 21  replace	 => TRUE,
+ 22  force_match => FALSE
+ 23  );
+ 24  END;
+ 25  /
+
+PL/SQL procedure successfully completed.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> DECLARE
+  2  signature INTEGER;
+  3  sql_txt CLOB;
+  4  h	     SYS.SQLPROF_ATTR;
+  5  BEGIN
+  6  sql_txt := q'[
+  7  SELECT * FROM t WHERE a = 54
+  8  ]';
+  9  h := SYS.SQLPROF_ATTR(
+ 10  q'[BEGIN_OUTLINE_DATA]',
+ 11  q'[IGNORE_OPTIM_EMBEDDED_HINTS]',
+ 12  q'[FULL(@"SEL$1" "T"@"SEL$1")]',
+ 13  q'[END_OUTLINE_DATA]');
+ 14  signature := DBMS_SQLTUNE.SQLTEXT_TO_SIGNATURE(sql_txt);
+ 15  DBMS_SQLTUNE.IMPORT_SQL_PROFILE (
+ 16  sql_text	 => sql_txt,
+ 17  profile	 => h,
+ 18  name	 => 'my_sql_profile_force',
+ 19  category	 => 'DEFAULT',
+ 20  validate	 => TRUE,
+ 21  replace	 => TRUE,
+ 22  force_match => TRUE
+ 23  );
+ 24  END;
+ 25  /
+
+PL/SQL procedure successfully completed.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> ttitle off
+SQL> select * from dba_sql_profiles where name like 'my%sql_profile%';
+
+NAME                           CATEGORY               SIGNATURE SQL_TEXT                                                                         CREATED
+------------------------------ ---------- --------------------- -------------------------------------------------------------------------------- ------------------------------
+LAST_MODIFIED                  DESCRIPTION          TYPE    STATUS   FOR    TASK_ID TASK_EXEC_NAME       TASK_OBJ_ID TASK_FND_ID TASK_REC_ID TASK_CON_DBID
+------------------------------ -------------------- ------- -------- --- ---------- -------------------- ----------- ----------- ----------- -------------
+my_sql_profile                 DEFAULT      9394869341287877934                                                                                  31-JUL-21 11.22.00.754436
+                                                                SELECT * FROM t WHERE a = 54
+31-JUL-21 11.22.00.000000                           MANUAL  ENABLED  NO
+
+my_sql_profile_force           DEFAULT     11431056000319719221                                                                                  31-JUL-21 11.22.01.035814
+                                                                SELECT * FROM t WHERE a = 54
+31-JUL-21 11.22.01.000000                           MANUAL  ENABLED  YES
+
+
+SQL> explain plan for SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+SQL> ttitle 'Execution plan with force match profile (full scan)'
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'));
+
+Sat Jul 31                                                                                                                                                                                     page    1
+                                                                          Execution plan with force match profile (full scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1601196873
+
+--------------------------------------------------------------------------
+| Id  | Operation         | Name | Rows  | Bytes | Cost (%CPU)| Time     |
+--------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |      |     1 |     6 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| T    |     1 |     6 |     3   (0)| 00:00:01 |
+--------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      FULL(@"SEL$1" "T"@"SEL$1")
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("A"=42)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  FULL(@"SEL$1" "T"@"SEL$1")
+
+Note
+-----
+   - SQL profile "my_sql_profile_force" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![C
+        DATA[SEL$1]]></s></h></f></q>
+
+
+53 rows selected.
+
+SQL> 
+SQL> explain plan for SELECT * FROM t WHERE a = 54;
+
+Explained.
+
+SQL> ttitle 'Execution plan with exact match profile (full scan - exact takes precedence over force)'
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'));
+
+Sat Jul 31                                                                                                                                                                                     page    1
+                                                        Execution plan with exact match profile (full scan - exact takes precedence over force)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1601196873
+
+--------------------------------------------------------------------------
+| Id  | Operation         | Name | Rows  | Bytes | Cost (%CPU)| Time     |
+--------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |      |     1 |     6 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| T    |     1 |     6 |     3   (0)| 00:00:01 |
+--------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      FULL(@"SEL$1" "T"@"SEL$1")
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("A"=54)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  FULL(@"SEL$1" "T"@"SEL$1")
+
+Note
+-----
+   - SQL profile "my_sql_profile" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![C
+        DATA[SEL$1]]></s></h></f></q>
+
+
+53 rows selected.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> REM How to Move SQL Profiles from One Database to Another (Including to Higher Versions) (Doc ID 457531.1)
+SQL> REM https://support.oracle.com/epmos/faces/DocContentDisplay?id=457531.1
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> exec DBMS_SQLTUNE.CREATE_STGTAB_SQLPROF(table_name=>'STAGE',schema_name=>user);
+
+PL/SQL procedure successfully completed.
+
+SQL> --desc stage
+SQL> truncate table stage;
+
+Table truncated.
+
+SQL> exec DBMS_SQLTUNE.PACK_STGTAB_SQLPROF (staging_table_name =>'STAGE',profile_name=>'my_sql_profile');
+
+PL/SQL procedure successfully completed.
+
+SQL> exec DBMS_SQLTUNE.PACK_STGTAB_SQLPROF (staging_table_name =>'STAGE',profile_name=>'my_sql_profile_force');
+
+PL/SQL procedure successfully completed.
+
+SQL> --select * from stage;
+SQL> select signature, sql_handle, obj_name, obj_type, sql_text, sqlflags from STAGE;
+
+Sat Jul 31                                                                                                                                                                                     page    1
+                                                        Execution plan with exact match profile (full scan - exact takes precedence over force)
+
+            SIGNATURE SQL_HANDLE                     OBJ_NAME
+--------------------- ------------------------------ --------------------------------------------------------------------------------------------------------------------------------
+OBJ_TYPE                       SQL_TEXT                                                                           SQLFLAGS
+------------------------------ -------------------------------------------------------------------------------- ----------
+  9394869341287877934 SQL_826147e3c6ac0d2e           my_sql_profile
+SQL_PROFILE                                                                                                              0
+                               SELECT * FROM t WHERE a = 54
+
+ 11431056000319719221 SQL_9ea344de32a78735           my_sql_profile_force
+SQL_PROFILE                                                                                                              1
+                               SELECT * FROM t WHERE a = 54
+
+
+SQL> REM by planing spot the difference I can see SQL_FLAGS different for force matched profile
+SQL> 
+SQL> /*
+SQL> variable force boolean
+SQL> UPDATE stage
+SQL> set sqlflags = 1
+SQL> , signature = dbms_sqltune.sqltext_to_signature(sql_text,TRUE);
+SQL> WHERE sqlflags = 0
+SQL> /
+SQL> */
+SQL> 
+SQL> DECLARE
+  2    l_sig INTEGER;
+  3  BEGIN
+  4    FOR i IN (
+  5  	 SELECT rowid, stage.* FROM stage WHERE sqlflags = 0 FOR UPDATE
+  6    ) LOOP
+  7  	 l_sig := dbms_sqltune.sqltext_to_signature(i.sql_text,TRUE);
+  8  	 UPDATE stage
+  9  	 SET	signature = l_sig
+ 10  	 ,	sqlflags = 1
+ 11  	 WHERE	sqlflags = 0
+ 12  	 AND	rowid = i.rowid;
+ 13    END LOOP;
+ 14  END;
+ 15  /
+
+PL/SQL procedure successfully completed.
+
+SQL> select signature, sql_handle, obj_name, obj_type, sql_text, sqlflags from STAGE;
+
+Sat Jul 31                                                                                                                                                                                     page    1
+                                                        Execution plan with exact match profile (full scan - exact takes precedence over force)
+
+            SIGNATURE SQL_HANDLE                     OBJ_NAME
+--------------------- ------------------------------ --------------------------------------------------------------------------------------------------------------------------------
+OBJ_TYPE                       SQL_TEXT                                                                           SQLFLAGS
+------------------------------ -------------------------------------------------------------------------------- ----------
+ 11431056000319719221 SQL_826147e3c6ac0d2e           my_sql_profile
+SQL_PROFILE                                                                                                              1
+                               SELECT * FROM t WHERE a = 54
+
+ 11431056000319719221 SQL_9ea344de32a78735           my_sql_profile_force
+SQL_PROFILE                                                                                                              1
+                               SELECT * FROM t WHERE a = 54
+
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> REM ORA-13841: SQL profile named my_sql_profile already exists for a different signature/category pair
+SQL> REM to avoid this error you must either drop or rename profile
+SQL> REM I am going to disable it and move it to another category to keep it out of the way in case I want to go back to it later
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> exec dbms_sqltune.alter_sql_profile(name=>'my_sql_profile', attribute_name=>'NAME',value=>'my_old_sql_profile');
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.alter_sql_profile(name=>'my_old_sql_profile', attribute_name=>'CATEGORY',value=>'DO_NOT_USE');
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.alter_sql_profile(name=>'my_old_sql_profile', attribute_name=>'STATUS',value=>'DISABLED');
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_sql_profile_force',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> EXEC DBMS_SQLTUNE.UNPACK_STGTAB_SQLPROF(profile_name => 'my_sql_profile', replace => TRUE, staging_table_name => 'STAGE');
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> ttitle off
+SQL> select * from dba_sql_profiles where name like 'my%sql_profile%';
+
+NAME                           CATEGORY               SIGNATURE SQL_TEXT                                                                         CREATED
+------------------------------ ---------- --------------------- -------------------------------------------------------------------------------- ------------------------------
+LAST_MODIFIED                  DESCRIPTION          TYPE    STATUS   FOR    TASK_ID TASK_EXEC_NAME       TASK_OBJ_ID TASK_FND_ID TASK_REC_ID TASK_CON_DBID
+------------------------------ -------------------- ------- -------- --- ---------- -------------------- ----------- ----------- ----------- -------------
+my_old_sql_profile             DO_NOT_USE   9394869341287877934                                                                                  31-JUL-21 11.22.00.754436
+                                                                SELECT * FROM t WHERE a = 54
+31-JUL-21 11.22.03.000000                           MANUAL  DISABLED NO
+
+my_sql_profile                 DEFAULT     11431056000319719221                                                                                  31-JUL-21 11.22.03.094824
+                                                                SELECT * FROM t WHERE a = 54
+31-JUL-21 11.22.03.000000                           MANUAL  ENABLED  YES
+
+
+SQL> explain plan for SELECT * FROM t WHERE a = 42;
+
+Explained.
+
+SQL> ttitle 'Execution plan with force match profile (full scan)'
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'));
+
+Sat Jul 31                                                                                                                                                                                     page    1
+                                                                          Execution plan with force match profile (full scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1601196873
+
+--------------------------------------------------------------------------
+| Id  | Operation         | Name | Rows  | Bytes | Cost (%CPU)| Time     |
+--------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |      |     1 |     6 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| T    |     1 |     6 |     3   (0)| 00:00:01 |
+--------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      FULL(@"SEL$1" "T"@"SEL$1")
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("A"=42)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  FULL(@"SEL$1" "T"@"SEL$1")
+
+Note
+-----
+   - SQL profile "my_sql_profile" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![C
+        DATA[SEL$1]]></s></h></f></q>
+
+
+53 rows selected.
+
+SQL> explain plan for SELECT * FROM t WHERE a = 54;
+
+Explained.
+
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'));
+
+Sat Jul 31                                                                                                                                                                                     page    1
+                                                                          Execution plan with force match profile (full scan)
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1601196873
+
+--------------------------------------------------------------------------
+| Id  | Operation         | Name | Rows  | Bytes | Cost (%CPU)| Time     |
+--------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |      |     1 |     6 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| T    |     1 |     6 |     3   (0)| 00:00:01 |
+--------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / T@SEL$1
+
+Outline Data
+-------------
+
+  /*+
+      BEGIN_OUTLINE_DATA
+      FULL(@"SEL$1" "T"@"SEL$1")
+      OUTLINE_LEAF(@"SEL$1")
+      ALL_ROWS
+      DB_VERSION('19.1.0')
+      OPTIMIZER_FEATURES_ENABLE('19.1.0')
+      IGNORE_OPTIM_EMBEDDED_HINTS
+      END_OUTLINE_DATA
+  */
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("A"=54)
+
+Hint Report (identified by operation id / Query Block Name / Object Alias):
+Total hints for statement: 2
+---------------------------------------------------------------------------
+
+   0 -  STATEMENT
+           -  IGNORE_OPTIM_EMBEDDED_HINTS
+
+   1 -  SEL$1 / T@SEL$1
+           -  FULL(@"SEL$1" "T"@"SEL$1")
+
+Note
+-----
+   - SQL profile "my_sql_profile" used for this statement
+
+Query Block Registry:
+---------------------
+
+  <q o="2" f="y"><n><![CDATA[SEL$1]]></n><f><h><t><![CDATA[T]]></t><s><![C
+        DATA[SEL$1]]></s></h></f></q>
+
+
+53 rows selected.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> spool off
