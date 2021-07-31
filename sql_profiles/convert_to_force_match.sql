@@ -1,4 +1,5 @@
 REM convert_to_force_match.sql
+REM see https://blog.go-faster.co.uk/2021/07/alter-sql-profiles-from-exact-to-force.html
 spool convert_to_force_match
 clear screen 
 set pages 9999 lines 200 autotrace off trimspool on echo on
