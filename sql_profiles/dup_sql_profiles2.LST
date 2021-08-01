@@ -1,0 +1,118 @@
+SQL> WITH function sig(p_sql_text CLOB, p_number INTEGER) RETURN NUMBER IS
+  2   l_sig NUMBER;
+  3  BEGIN
+  4   IF p_number > 0 THEN
+  5    l_sig := dbms_sqltune.sqltext_to_signature(p_sql_text,TRUE);
+  6   ELSIF p_number = 0 THEN
+  7    l_sig := dbms_sqltune.sqltext_to_signature(p_sql_text,FALSE);
+  8   END IF;
+  9   RETURN l_sig;
+ 10  END sig;
+ 11  function norm(p_queryin CLOB) RETURN CLOB IS
+ 12    l_queryin CLOB;
+ 13    l_queryout CLOB;
+ 14    l_lastchar varchar2(1) := ' ';
+ 15    l_char varchar2(1);
+ 16    l_in_quotes boolean default FALSE;
+ 17  begin
+ 18    l_queryin := p_queryin;
+ 19    l_queryin := REGEXP_REPLACE(l_queryin, '[^[:print:]]', ' ');
+ 20  --l_queryin := REGEXP_REPLACE(l_queryin, '(\r\n)+|\r+|\n+|\t+', ' ');
+ 21    for i in 1 .. length( l_queryin )
+ 22  	loop
+ 23  	  l_char := substr(l_queryin,i,1);
+ 24  	  if ( l_char = '''' and l_in_quotes )
+ 25  	   then
+ 26  	    l_in_quotes := FALSE;
+ 27  	  elsif ( l_char = '''' and NOT l_in_quotes )
+ 28  	   then
+ 29  	    l_in_quotes := TRUE;
+ 30  	  end if;
+ 31  
+ 32  	 if ( l_in_quotes )
+ 33  	   then
+ 34  	    l_queryout := l_queryout || l_char;
+ 35  	 elsif ( NOT l_in_quotes and l_char = ' ' and l_lastchar = ' ') THEN
+ 36  	     --elsif ( NOT l_in_quotes and REGEXP_LIKE(l_char,'[[:space:]]') and REGEXP_LIKE(l_lastchar,'[[:space:]]')) THEN
+ 37  	    NULL;
+ 38  	 else
+ 39  	    l_queryout := l_queryout || upper(l_char);
+ 40  	 end if;
+ 41  	 l_lastchar := l_char;
+ 42    end loop;
+ 43    RETURN l_queryout;
+ 44  END norm;
+ 45  function str_diff(p_str1 CLOB, p_str2 CLOB) RETURN NUMBER IS
+ 46    l_len1 INTEGER;
+ 47    l_len2 INTEGER;
+ 48    l_counter INTEGER := 1;
+ 49  BEGIN
+ 50    l_len1 := LENGTH(p_str1);
+ 51    l_len2 := LENGTH(p_str2);
+ 52    WHILE l_counter <= l_len1 AND l_counter <= l_len2 LOOP
+ 53  --  dbms_output.put_line(l_counter||':'||substr(p_str1,l_counter,1)||'='||substr(p_str2,l_counter,1));
+ 54  	 IF substr(p_str1,l_counter,1) = substr(p_str2,l_counter,1) THEN
+ 55  	   l_counter := l_counter + 1;
+ 56  	 ELSE
+ 57  	   RETURN l_counter-1;
+ 58  	 END IF;
+ 59    END LOOP;
+ 60    RETURN 0;
+ 61  END str_diff;
+ 62  x as (
+ 63  select CASE WHEN force_matching = 'NO'  THEN signature ELSE sig(sql_text, 0) END exact_sig
+ 64  ,	    CASE WHEN force_matching = 'YES' THEN signature ELSE sig(sql_text, 1) END force_sig
+ 65  ,	    p.*
+ 66  --,      h.comp_data
+ 67  --,      ora_hash(h.comp_data) hint_hash
+ 68  from   dba_sql_profiles p
+ 69  --,      DBMSHSXP_SQL_PROFILE_ATTR h
+ 70  --WHERE  p.name = h.profile_name
+ 71  ), y as (
+ 72  select f.force_matching, f.force_sig, f.name force_name, f.created force_created, f.status force_status
+ 73  ,	    e.force_matching exact_matching, e.exact_sig, e.name exact_name, e.created exact_created, e.status exact_status, e.category
+ 74  --,      e.hint_hash, f.hint_hash
+ 75  ,	    norm(e.sql_text) esql_text, norm(f.sql_text) fsql_text
+ 76  from   x e
+ 77  ,	    x f
+ 78  where  f.force_matching = 'YES'
+ 79  and    e.force_matching = 'NO'
+ 80  and    e.force_sig = f.force_sig
+ 81  and    e.category = f.category
+ 82  and    e.name != f.name
+ 83  and    f.status = 'ENABLED'
+ 84  --and    e.status = 'ENABLED'
+ 85  ), z as (
+ 86  select y.*
+ 87  ,	    str_diff(fsql_Text, esql_text) diff_len
+ 88  from y
+ 89  )
+ 90  select force_matching, force_Sig, force_name, force_created, force_status
+ 91  ,	    exact_matching, exact_sig, exact_name, exact_Created, exact_status
+ 92  , substr(fsql_text,1,diff_len) common_text
+ 93  , substr(fsql_text,diff_len+1) fdiff_text
+ 94  , substr(esql_text,diff_len+1) ediff_text
+ 95  from z
+ 96  --where force_sig = 13263870199881122078
+ 97  order by force_sig
+ 98  --fetch first 1 rows only
+ 99  /
+
+           Force Matching Force                          Force                        Force               Exact Matching Exact                          Exact                        Exact
+FOR             Signature Name                           Created Date                 Status   EXA             Signature Name                           Created Date                 Status
+--- --------------------- ------------------------------ ---------------------------- -------- --- --------------------- ------------------------------ ---------------------------- --------
+Common Text
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Force Text                                                                                          Exact Text
+--------------------------------------------------------------------------------------------------- ---------------------------------------------------------------------------------------------------
+YES  11431056000319719221 my_sql_profile_force           16:35:36 01/08/2021          ENABLED  NO   12140764948557749245 my_sql_profile_24              16:35:36 01/08/2021          ENABLED
+SELECT * FROM T WHERE A =
+54                                                                                                  24
+
+                                                                                      ENABLED  NO   14843900676141266266 my_sql_profile_42              16:35:36 01/08/2021          ENABLED
+SELECT * FROM T WHERE A =
+54                                                                                                  42
+
+
+
+SQL> spool off

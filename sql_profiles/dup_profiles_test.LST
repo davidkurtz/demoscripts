@@ -1,0 +1,182 @@
+SQL> clear screen
+
+SQL> ttitle off
+SQL> break on report
+SQL> set pages 9999 lines 160 autotrace off trimspool on echo on
+SQL> column name format a30
+SQL> column category format a10
+SQL> column created format a30
+SQL> column sql_Text format a50
+SQL> column last_modified format a30
+SQL> column task_exec_name format a20
+SQL> column signature format 99999999999999999999
+SQL> column description format a20
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> DROP TABLE t PURGE;
+DROP TABLE t PURGE
+           *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_sql_profile_24',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_sql_profile_42',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_sql_profile_54',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> exec dbms_sqltune.drop_sql_profile('my_sql_profile_force',TRUE);
+
+PL/SQL procedure successfully completed.
+
+SQL> /*----------------------------------------------------------------------------------------------------
+> CREATE TABLE t (a not null, b) AS
+SQL> SELECT rownum, ceil(sqrt(rownum)) FROM dual connect by level <= 100;
+SQL> create unique index t_idx on t(a);
+SQL> exec dbms_stats.gather_table_stats(user,'T');
+SQL> 
+SQL> select * from dba_sql_profiles where name like 'my%sql_profile%';
+SQL> explain plan for SELECT * FROM t WHERE a = 42;
+SQL> select * from table(dbms_xplan.display(null,null,'ADVANCED +ADAPTIVE -PROJECTION'));
+SQL> ----------------------------------------------------------------------------------------------------*/
+SQL> DECLARE
+  2  signature INTEGER;
+  3  sql_txt CLOB;
+  4  h	     SYS.SQLPROF_ATTR;
+  5  BEGIN
+  6  sql_txt := q'[
+  7  SELECT * FROM t
+  8  WHERE a = 24
+  9  ]';
+ 10  h := SYS.SQLPROF_ATTR(
+ 11  q'[BEGIN_OUTLINE_DATA]',
+ 12  q'[IGNORE_OPTIM_EMBEDDED_HINTS]',
+ 13  q'[FULL(@"SEL$1" "T"@"SEL$1")]',
+ 14  q'[END_OUTLINE_DATA]');
+ 15  signature := DBMS_SQLTUNE.SQLTEXT_TO_SIGNATURE(sql_txt);
+ 16  DBMS_SQLTUNE.IMPORT_SQL_PROFILE (
+ 17  sql_text	 => sql_txt,
+ 18  profile	 => h,
+ 19  name	 => 'my_sql_profile_24',
+ 20  category	 => 'DEFAULT',
+ 21  validate	 => TRUE,
+ 22  replace	 => TRUE,
+ 23  force_match => FALSE
+ 24  );
+ 25  END;
+ 26  /
+
+PL/SQL procedure successfully completed.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> DECLARE
+  2  signature INTEGER;
+  3  sql_txt CLOB;
+  4  h	     SYS.SQLPROF_ATTR;
+  5  BEGIN
+  6  sql_txt := q'[
+  7  SELECT * FROM t WHERE a = 42
+  8  ]';
+  9  h := SYS.SQLPROF_ATTR(
+ 10  q'[BEGIN_OUTLINE_DATA]',
+ 11  q'[IGNORE_OPTIM_EMBEDDED_HINTS]',
+ 12  q'[FULL(@"SEL$1" "T"@"SEL$1")]',
+ 13  q'[END_OUTLINE_DATA]');
+ 14  signature := DBMS_SQLTUNE.SQLTEXT_TO_SIGNATURE(sql_txt);
+ 15  DBMS_SQLTUNE.IMPORT_SQL_PROFILE (
+ 16  sql_text	 => sql_txt,
+ 17  profile	 => h,
+ 18  name	 => 'my_sql_profile_42',
+ 19  category	 => 'DEFAULT',
+ 20  validate	 => TRUE,
+ 21  replace	 => TRUE,
+ 22  force_match => FALSE
+ 23  );
+ 24  END;
+ 25  /
+
+PL/SQL procedure successfully completed.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> DECLARE
+  2  signature INTEGER;
+  3  sql_txt CLOB;
+  4  h	     SYS.SQLPROF_ATTR;
+  5  BEGIN
+  6  sql_txt := q'[
+  7  SELECT * FROM t WHERE a = 54
+  8  ]';
+  9  h := SYS.SQLPROF_ATTR(
+ 10  q'[BEGIN_OUTLINE_DATA]',
+ 11  q'[IGNORE_OPTIM_EMBEDDED_HINTS]',
+ 12  q'[FULL(@"SEL$1" "T"@"SEL$1")]',
+ 13  q'[END_OUTLINE_DATA]');
+ 14  signature := DBMS_SQLTUNE.SQLTEXT_TO_SIGNATURE(sql_txt);
+ 15  DBMS_SQLTUNE.IMPORT_SQL_PROFILE (
+ 16  sql_text	 => sql_txt,
+ 17  profile	 => h,
+ 18  name	 => 'my_sql_profile_force',
+ 19  category	 => 'DEFAULT',
+ 20  validate	 => TRUE,
+ 21  replace	 => TRUE,
+ 22  force_match => TRUE
+ 23  );
+ 24  END;
+ 25  /
+
+PL/SQL procedure successfully completed.
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> select * from dba_sql_profiles;
+
+NAME                           CATEGORY               SIGNATURE SQL_TEXT                                           CREATED
+------------------------------ ---------- --------------------- -------------------------------------------------- ------------------------------
+LAST_MODIFIED                  DESCRIPTION          TYPE    STATUS   FOR    TASK_ID TASK_EXEC_NAME       TASK_OBJ_ID TASK_FND_ID TASK_REC_ID TASK_CON_DBID
+------------------------------ -------------------- ------- -------- --- ---------- -------------------- ----------- ----------- ----------- -------------
+my_sql_profile_force           DEFAULT     11431056000319719221                                                    16:35:36 01/08/2021
+                                                                SELECT * FROM t WHERE a = 54
+16:35:36 01/08/2021                                 MANUAL  ENABLED  YES
+
+my_sql_profile_24              DEFAULT     12140764948557749245                                                    16:35:36 01/08/2021
+                                                                SELECT * FROM t
+                                                                WHERE a = 24
+16:35:36 01/08/2021                                 MANUAL  ENABLED  NO
+
+my_sql_profile_42              DEFAULT     14843900676141266266                                                    16:35:36 01/08/2021
+                                                                SELECT * FROM t WHERE a = 42
+16:35:36 01/08/2021                                 MANUAL  ENABLED  NO
+
+
+SQL> ----------------------------------------------------------------------------------------------------
+SQL> @@dup_sql_profiles1.sql
+SQL> REM dup_sql_profiles1.sql
+SQL> set long 600 lines 200 pages 999
+SQL> break on force_sig skip 1
+SQL> column profile# heading 'Prof|#' format 999
+SQL> column num_profiles heading 'Num|Profs' format 999
+SQL> column exact_sig heading 'Exact Matching|Signature' format 99999999999999999999
+SQL> column force_sig heading 'Force Matching|Signature' format 99999999999999999999
+SQL> column name format a30
+SQL> column category format a20
+SQL> column created format a28
+SQL> column sql_Text format a200 wrap on
+SQL> --column exact_name heading 'Exact|Name' format a30
+SQL> --column force_name heading 'Force|Name' format a30
+SQL> --column exact_created heading 'Exact|Created Date' format a28
+SQL> --column force_created heading 'Force|Created Date' format a28
+SQL> --column exact_status heading 'Exact|Status'
+SQL> --column force_status heading 'Force|Status'
+SQL> --column common_text heading 'Common Text' format a199
+SQL> --column ediff_text heading 'Exact Text' format a99
+SQL> --column fdiff_text heading 'Force Text' format a99
+SQL> alter session set nls_timestamp_format = 'hh24:mi:ss dd/mm/yyyy';
+
+Session altered.
+
+SQL> spool dup_sql_profiles1

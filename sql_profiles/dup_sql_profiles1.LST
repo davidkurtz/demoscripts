@@ -1,0 +1,52 @@
+SQL> WITH function sig(p_sql_text CLOB, p_number INTEGER) RETURN NUMBER IS
+  2   l_sig NUMBER;
+  3  BEGIN
+  4   IF p_number > 0 THEN
+  5    l_sig := dbms_sqltune.sqltext_to_signature(p_sql_text,TRUE);
+  6   ELSIF p_number = 0 THEN
+  7    l_sig := dbms_sqltune.sqltext_to_signature(p_sql_text,FALSE);
+  8   END IF;
+  9   RETURN l_sig;
+ 10  END;
+ 11  x as (
+ 12  select CASE WHEN force_matching = 'NO'  THEN signature ELSE NULL /*sig(sql_text, 0)*/ END exact_sig
+ 13  ,	    CASE WHEN force_matching = 'YES' THEN signature ELSE sig(sql_text, 1) END force_sig
+ 14  ,	    p.*
+ 15  from   dba_sql_profiles p
+ 16  where  (status = 'ENABLED' or force_matching = 'NO')
+ 17  and    category = 'DEFAULT'
+ 18  ), y as (
+ 19  select x.*
+ 20  , row_number() over (partition by category, force_sig order by force_matching desc, exact_sig nulls first) profile#
+ 21  , count(*) over (partition by category, force_sig) num_profiles
+ 22  from x
+ 23  )
+ 24  select profile#, num_profiles, force_sig, exact_sig, name, created, category, status, force_matching, sql_text
+ 25  from y
+ 26  where num_profiles > 1
+ 27  --and force_matching = 'NO'
+ 28  --and force_sig = 13263870199881122078
+ 29  order by force_sig, force_matching desc, exact_sig
+ 30  /
+
+Prof   Num        Force Matching        Exact Matching
+   # Profs             Signature             Signature NAME                           CREATED                      CATEGORY             STATUS   FOR
+---- ----- --------------------- --------------------- ------------------------------ ---------------------------- -------------------- -------- ---
+SQL_TEXT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   1     3  11431056000319719221                       my_sql_profile_force           16:35:36 01/08/2021          DEFAULT              ENABLED  YES
+
+SELECT * FROM t WHERE a = 54
+
+   2     3                        12140764948557749245 my_sql_profile_24              16:35:36 01/08/2021          DEFAULT              ENABLED  NO
+
+SELECT * FROM t
+WHERE a = 24
+
+   3     3                        14843900676141266266 my_sql_profile_42              16:35:36 01/08/2021          DEFAULT              ENABLED  NO
+
+SELECT * FROM t WHERE a = 42
+
+
+
+SQL> spool off
